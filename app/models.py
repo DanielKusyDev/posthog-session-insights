@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from app.db_models import RawEventStatus
+
 PostHogProperties = dict[str, Any]
 EnrichedContext = dict[str, Any]
 
@@ -16,8 +18,22 @@ class PostHogEvent(BaseModel):
     distinct_id: str
     properties: PostHogProperties
     timestamp: datetime
+    elements_chain: str | None
 
     model_config = {"from_attributes": True}
+
+
+class RawEvent(BaseModel):
+    """Internal, raw event version of posthog event, with better structure and job status tracking properties."""
+
+    raw_event_id: str
+    event_name: str
+    user_id: str
+    timestamp: datetime
+    created_at: datetime | None
+    properties: PostHogProperties
+    processed_at: datetime | None
+    status: RawEventStatus
 
 
 class EnrichedEventBase(BaseModel, ABC):

@@ -21,6 +21,7 @@ raw_event = Table(
     Column("timestamp", DateTime(timezone=True), nullable=False),
     Column("created_at", DateTime(timezone=True), server_default=func.current_timestamp()),
     Column("properties", JSON),
+    Column("elements_chain", String),
     Column("processed_at", DateTime),
     Column(
         "status", SAEnum(*(s.value for s in RawEventStatus), create_type=False, name="event_status"), nullable=False
