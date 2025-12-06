@@ -1,7 +1,18 @@
 from pytest import param, mark
 
-from app.services.enrichment_services import parse_elements_chain, ParsedElements, classify_event, EventClassification, \
-    EventType, ActionType, infer_action_from_custom_event
+from app.services.enrichment_services import (
+    parse_elements_chain,
+    ParsedElements,
+    classify_event,
+    EventClassification,
+    EventType,
+    ActionType,
+    infer_action_from_custom_event,
+    PageInfo,
+    normalize_page_path,
+    extract_page_info,
+    humanize_page_path,
+)
 
 
 @mark.parametrize(
@@ -384,3 +395,157 @@ def test_autocapture_with_extra_properties() -> None:
 
     assert result.event_type == EventType.click
     assert result.action_type == ActionType.submit
+
+
+@mark.parametrize(
+    "properties,expected",
+    [
+        # Standard cases with $pathname and title
+        param(
+            {"$pathname": "/", "title": "Home - Company"},
+            PageInfo(page_path="/", page_title="Home - Company"),
+            id="home_with_title",
+        ),
+        param(
+            {"$pathname": "/about", "title": "About Us"},
+            PageInfo(page_path="/about", page_title="About Us"),
+            id="about_with_title",
+        ),
+        param(
+            {"$pathname": "/billing", "title": "Billing Settings"},
+            PageInfo(page_path="/billing", page_title="Billing Settings"),
+            id="billing_with_title",
+        ),
+        # Without title (humanize fallback)
+        param(
+            {"$pathname": "/products"},
+            PageInfo(page_path="/products", page_title="products page"),
+            id="without_title_humanize",
+        ),
+        param(
+            {"$pathname": "/about"},
+            PageInfo(page_path="/about", page_title="about page"),
+            id="about_without_title",
+        ),
+        # Trailing slashes (normalized)
+        param(
+            {"$pathname": "/about/"},
+            PageInfo(page_path="/about", page_title="about page"),
+            id="trailing_slash_normalized",
+        ),
+        param(
+            {"$pathname": "/billing/settings/"},
+            PageInfo(page_path="/billing/settings", page_title="billing page"),
+            id="nested_trailing_slash",
+        ),
+        param(
+            {"$pathname": "/", "title": "Home"},
+            PageInfo(page_path="/", page_title="Home"),
+            id="root_with_title",
+        ),
+        # Nested paths
+        param(
+            {"$pathname": "/billing/settings", "title": "Settings"},
+            PageInfo(page_path="/billing/settings", page_title="Settings"),
+            id="nested_path_with_title",
+        ),
+        param(
+            {"$pathname": "/products/123/details"},
+            PageInfo(page_path="/products/123/details", page_title="products page"),
+            id="deep_nested_path_humanized",
+        ),
+        # Empty properties (defaults to / and humanizes)
+        param(
+            {},
+            PageInfo(page_path="/", page_title="home page"),
+            id="empty_properties_defaults",
+        ),
+        # Missing $pathname (defaults to /)
+        param(
+            {"title": "Some Page"},
+            PageInfo(page_path="/", page_title="Some Page"),
+            id="missing_pathname_with_title",
+        ),
+        param(
+            {"other_property": "value"},
+            PageInfo(page_path="/", page_title="home page"),
+            id="no_pathname_no_title",
+        ),
+        # Real PostHog example
+        param(
+            {
+                "$pathname": "/",
+                "$current_url": "http://localhost:3000/",
+                "title": "PostHog Demo Website",
+            },
+            PageInfo(page_path="/", page_title="PostHog Demo Website"),
+            id="real_posthog_example",
+        ),
+        # Hyphenated and underscored paths (humanized)
+        param(
+            {"$pathname": "/user-profile"},
+            PageInfo(page_path="/user-profile", page_title="user profile page"),
+            id="hyphenated_humanized",
+        ),
+        param(
+            {"$pathname": "/my_account"},
+            PageInfo(page_path="/my_account", page_title="my account page"),
+            id="underscored_humanized",
+        ),
+        param(
+            {"$pathname": "/user-profile/settings"},
+            PageInfo(page_path="/user-profile/settings", page_title="user profile page"),
+            id="hyphenated_nested",
+        ),
+    ],
+)
+def test_extract_page_info(properties: dict, expected: PageInfo) -> None:
+    """Test extraction of page path and title from event properties"""
+    assert extract_page_info(properties) == expected
+
+
+@mark.parametrize(
+    "page_path,expected",
+    [
+        param("/", "home page", id="root"),
+        param("/about", "about page", id="about"),
+        param("/billing", "billing page", id="billing"),
+        param("/products", "products page", id="products"),
+        param("/billing/settings", "billing page", id="nested_first_segment"),
+        param("/products/123", "products page", id="nested_with_id"),
+        param("/products/123/details", "products page", id="deep_nested"),
+        param("/user-profile", "user profile page", id="hyphenated"),
+        param("/my_account", "my account page", id="underscored"),
+        param("/user-profile/settings", "user profile page", id="hyphenated_nested"),
+        param("/UPPERCASE", "UPPERCASE page", id="uppercase_preserved"),
+        param("/MixedCase", "MixedCase page", id="mixedcase_preserved"),
+    ],
+)
+def test_humanize_page_path(page_path: str, expected: str) -> None:
+    """Test humanization of page paths into readable names"""
+    assert humanize_page_path(page_path) == expected
+
+
+@mark.parametrize(
+    "page_path,expected",
+    [
+        param("/", "/", id="root_unchanged"),
+        param("/about", "/about", id="no_trailing_slash"),
+        param("/about/", "/about", id="trailing_slash_removed"),
+        param("/billing/settings", "/billing/settings", id="nested_no_trailing"),
+        param("/billing/settings/", "/billing/settings", id="nested_trailing_removed"),
+        param("/products/123/", "/products/123", id="deep_nested_trailing_removed"),
+    ],
+)
+def test_normalize_page_path(page_path: str, expected: str) -> None:
+    """Test normalization of page paths (trailing slash removal)"""
+    assert normalize_page_path(page_path) == expected
+
+
+def test_extract_page_info_trailing_slash_equivalence() -> None:
+    """Test that /about and /about/ are treated identically"""
+    result_without = extract_page_info({"$pathname": "/about"})
+    result_with = extract_page_info({"$pathname": "/about/"})
+
+    assert result_without.page_path == result_with.page_path == "/about"
+    assert result_without.page_title == result_with.page_title == "about page"

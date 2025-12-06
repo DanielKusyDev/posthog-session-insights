@@ -1,16 +1,10 @@
 import re
 from enum import Enum
+from urllib.parse import urlparse
 
 from pydantic import BaseModel
 
 from app.models import PostHogProperties
-
-
-class ParsedElements(BaseModel):
-    element_type: str | None = None
-    element_text: str | None = None
-    attributes: dict[str, str] = {}
-    hierarchy: list[str] = []
 
 
 class EventType(str, Enum):
@@ -36,9 +30,21 @@ class ActionType(str, Enum):
     unknown = "unknown"
 
 
+class ParsedElements(BaseModel):
+    element_type: str | None = None
+    element_text: str | None = None
+    attributes: dict[str, str] = {}
+    hierarchy: list[str] = []
+
+
 class EventClassification(BaseModel):
     event_type: EventType
     action_type: ActionType
+
+
+class PageInfo(BaseModel):
+    page_path: str
+    page_title: str
 
 
 def parse_elements_chain(chain: str) -> ParsedElements:
@@ -50,14 +56,6 @@ def parse_elements_chain(chain: str) -> ParsedElements:
     2. Element text - from `text="..."` attribute or `attr__alt="..."` in case of images
     3. Custom attributes - all `attr__data-ph-capture-attribute-*` attributes
     4. Hierarchy - first 5 DOM levels from chain segments
-
-    Examples:
-        >>> parse_elements_chain('button:text="Shop"')
-        ParsedElements(element_type='button', element_text='Shop', ...)
-
-        >>> parse_elements_chain('img:attr__alt="Logo"attr__data-ph-capture-attribute-nav="home";div;header')
-        ParsedElements(element_type='img', element_text='Logo', attributes={'nav': 'home'},
-                       hierarchy=['img', 'div', 'header'])
     """
     if not chain:
         return ParsedElements()
@@ -168,3 +166,34 @@ def classify_event(event_name: str, properties: PostHogProperties) -> EventClass
         return EventClassification(event_type=EventType.custom, action_type=action_type)
 
     return EventClassification(event_type=EventType.unknown, action_type=ActionType.unknown)
+
+
+def normalize_page_path(page_path: str) -> str:
+    return "/" if page_path == "/" else page_path.rstrip("/")
+
+
+def humanize_page_path(page_path: str) -> str:
+    """
+    Convert page path to human-readable page name.
+    Example:
+        >>> humanize_page_path("/about")
+        "about page"
+    """
+    path = page_path.strip("/")
+
+    if not path:
+        return "home page"
+
+    first_segment = path.split("/")[0]  # Take first segment (e.g., "billing/settings" → "billing")
+    humanized = first_segment.replace("_", " ").replace("-", " ")  # Replace underscores/hyphens with spaces
+    return f"{humanized} page"
+
+
+def extract_page_info(properties: PostHogProperties) -> PageInfo:
+    """Extract page path and title from PostHog event properties."""
+
+    page_path = properties.get("$pathname", "/")
+    page_path = normalize_page_path(page_path)  # remove trailing slashes
+    page_title = properties.get("title", humanize_page_path(page_path))
+
+    return PageInfo(page_path=page_path, page_title=page_title)
