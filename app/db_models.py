@@ -20,7 +20,6 @@ from app.db import metadata
 
 class RawEventStatus(str, Enum):
     pending = "PENDING"
-    processing = "PROCESSING"
     done = "DONE"
     failed = "FAILED"
 

@@ -2,7 +2,7 @@ import asyncio
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from app.db import get_connection
+from app.db import get_connection, get_transaction
 from app.models import RawEvent
 from app.repositories.raw_event_repo import fetch_events_for_processing
 from app.services.event_services import mark_as_failed, mark_as_processing, mark_as_done
@@ -21,22 +21,20 @@ async def process_single_event(connection: AsyncConnection, event: RawEvent) -> 
         if not session_id:
             raise ValueError(f"Missing $session_id in raw_event {event.raw_event_id}")
 
-        # Mark raw event as being processed
-        async with connection.begin():
-            await mark_as_processing(connection=connection, event_id=event.raw_event_id)
-
         # Get or create session
         session = await get_or_create_session(connection=connection, event=event)
 
         # Enrich the event
+        # enriched = await enrich_event(raw_event=event, session=session)
 
         # Save enriched event
+        # await create_enriched_event(conn, enriched)
 
         # Update session activity
+        # await update_session_activity(conn, session_id, event, enriched.event_type)
 
         # Mark raw event as processed
-        async with connection.begin():
-            await mark_as_done(connection, event.raw_event_id)
+        await mark_as_done(connection, event.raw_event_id)
 
     except Exception:
         await mark_as_failed(connection=connection, event_id=event.raw_event_id)
@@ -56,7 +54,7 @@ async def process_batch(conn: AsyncConnection) -> int:
 
 async def main() -> None:
     while True:
-        async with get_connection() as conn:
+        async with get_transaction() as conn:
             processed = await process_batch(conn)
 
         if processed == 0:
