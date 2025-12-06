@@ -1,5 +1,18 @@
 from enum import Enum
-from sqlalchemy import Table, Column, String, DateTime, JSON, Index, UUID, Enum as SAEnum, ForeignKey, Integer
+from sqlalchemy import (
+    Table,
+    Column,
+    String,
+    DateTime,
+    JSON,
+    Index,
+    UUID,
+    Enum as SAEnum,
+    ForeignKey,
+    Integer,
+    Boolean,
+    Text,
+)
 from sqlalchemy.sql import func
 
 from app.db import metadata
@@ -20,6 +33,12 @@ raw_event = Table(
     Column("user_id", String, nullable=False),
     Column("timestamp", DateTime(timezone=True), nullable=False),
     Column("created_at", DateTime(timezone=True), server_default=func.current_timestamp()),
+    Column(
+        "updated_at",
+        DateTime(timezone=True),
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+    ),
     Column("properties", JSON),
     Column("elements_chain", String),
     Column("processed_at", DateTime),
@@ -52,4 +71,34 @@ enriched_event = Table(
     Index("ix_enriched_user_timestamp", "user_id", "timestamp"),
     Index("ix_enriched_session_timestamp", "session_id", "timestamp"),
     Index("ix_enriched_timestamp", "timestamp"),
+)
+
+session = Table(
+    "session",
+    metadata,
+    Column("session_id", String, primary_key=True),  # PostHog's $session_id
+    Column("user_id", String, nullable=False),
+    Column("started_at", DateTime(timezone=True), nullable=False),
+    Column("last_activity_at", DateTime(timezone=True), nullable=False),
+    Column("ended_at", DateTime(timezone=True)),
+    Column("event_count", Integer, default=0, nullable=False),
+    Column("page_views_count", Integer, default=0, nullable=False),
+    Column("clicks_count", Integer, default=0, nullable=False),
+    Column("first_page", String),  # Metadata for LLM context
+    Column("last_page", String),
+    Column("session_summary", Text),  # ~500 chars generated summary
+    # Status
+    Column("is_active", Boolean, default=True, nullable=False),
+    # System timestamps
+    Column("created_at", DateTime(timezone=True), server_default=func.current_timestamp()),
+    Column(
+        "updated_at",
+        DateTime(timezone=True),
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+    ),
+    # Indexes
+    Index("ix_session_user_started", "user_id", "started_at"),
+    Index("ix_session_user_active", "user_id", "is_active"),
+    Index("ix_session_active_activity", "is_active", "last_activity_at"),
 )
