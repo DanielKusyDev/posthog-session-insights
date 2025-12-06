@@ -40,14 +40,6 @@ Custom events (no `$` prefix) are classified as `event_type=custom` with inferre
 | start, open, view, navigate | navigate | `upgrade_started`, `page_viewed` |
 | *no match* | click (default) | `random_event` |
 
-**Example:**
-```python
-classify_event("product_clicked", {})
-# → EventClassification(event_type="custom", action_type="click")
-
-classify_event("plan_upgrade_started", {})
-# → EventClassification(event_type="custom", action_type="navigate")
-```
 
 ### Unknown Events
 
@@ -56,6 +48,25 @@ Unknown PostHog system events (e.g., `$unknown_future_event`) are classified as:
 - `action_type=unknown`
 
 This ensures the pipeline doesn't break when PostHog introduces new event types.
+
+## Page Information Extraction
+
+Extracts page context from PostHog event properties.
+
+### Logic
+
+- **page_path**: from `$pathname` (default `/`), trailing slashes removed
+- **page_title**: from `title` property, or humanized path as fallback
+
+### Path Humanization
+
+When `title` is missing, path is converted to readable name:
+```python
+"/"                  → "home page"
+"/about"            → "about page"
+"/billing/settings" → "billing page"  # First segment only
+"/user-profile"     → "user profile page"  # Hyphens → spaces
+```
 
 ## Error Handling & Retry Logic
 
