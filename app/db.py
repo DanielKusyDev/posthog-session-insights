@@ -24,6 +24,13 @@ async def init_db() -> None:
 
 
 @asynccontextmanager
+async def get_connection() -> AsyncIterator[AsyncConnection]:
+    engine = get_engine()
+    async with engine.connect() as conn:
+        yield conn
+
+
+@asynccontextmanager
 async def get_transaction() -> AsyncIterator[AsyncConnection]:
     engine = get_engine()
     async with engine.connect() as conn:
