@@ -29,4 +29,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=BASE_DIR / ".env")
 
 
-settings = Settings()
+settings: Settings | None = None
+
+
+async def init_settings() -> None:
+    global settings
+    settings = Settings()
