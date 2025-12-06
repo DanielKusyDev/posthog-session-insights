@@ -1,6 +1,9 @@
 import re
+from enum import Enum
 
 from pydantic import BaseModel
+
+from app.models import PostHogProperties
 
 
 class ParsedElements(BaseModel):
@@ -8,6 +11,34 @@ class ParsedElements(BaseModel):
     element_text: str | None = None
     attributes: dict[str, str] = {}
     hierarchy: list[str] = []
+
+
+class EventType(str, Enum):
+    """High-level event category"""
+
+    pageview = "pageview"
+    click = "click"
+    navigation = "navigation"
+    custom = "custom"
+    unknown = "unknown"
+
+
+class ActionType(str, Enum):
+    """Specific user action"""
+
+    view = "view"
+    leave = "leave"
+    click = "click"
+    rage_click = "rage_click"
+    submit = "submit"
+    change = "change"
+    navigate = "navigate"
+    unknown = "unknown"
+
+
+class EventClassification(BaseModel):
+    event_type: EventType
+    action_type: ActionType
 
 
 def parse_elements_chain(chain: str) -> ParsedElements:
@@ -69,3 +100,71 @@ def parse_elements_chain(chain: str) -> ParsedElements:
         attributes=attributes,
         hierarchy=hierarchy,
     )
+
+
+def _classify_autocapture(properties: PostHogProperties) -> EventClassification:
+    # Check properties.$event_type to determine specific action
+    autocapture_type = properties.get("$event_type", "click")  # click as default
+    match autocapture_type:
+        case "click":
+            return EventClassification(event_type=EventType.click, action_type=ActionType.click)
+        case "submit":
+            return EventClassification(event_type=EventType.click, action_type=ActionType.submit)
+        case "change":
+            return EventClassification(event_type=EventType.click, action_type=ActionType.change)
+    return EventClassification(event_type=EventType.click, action_type=ActionType.click)
+
+
+def infer_action_from_custom_event(event_name: str) -> str:
+    """
+    Infer action_type from custom event name.
+
+    We assume that names of the events were chosen with attention to the actual action it represents thus this is not
+    an algorithm but rather a heuristic.
+    """
+    event_lower = event_name.lower()
+
+    # Click patterns
+    if any(keyword in event_lower for keyword in ["click", "select", "choose"]):
+        return ActionType.click
+
+    # Submit patterns
+    if any(keyword in event_lower for keyword in ["submit", "complete", "finish"]):
+        return ActionType.submit
+
+    # Navigate patterns
+    if any(keyword in event_lower for keyword in ["start", "open", "view", "navigate"]):
+        return ActionType.navigate
+
+    # Default for custom events
+    return ActionType.click
+
+
+def classify_event(event_name: str, properties: PostHogProperties) -> EventClassification:
+    """
+    Classify PostHog event into event_type and action_type.
+
+    Classification logic:
+    1. PostHog system events ($pageview, $autocapture, etc.) - use mapping
+    2. $autocapture - check properties.$event_type for specific action
+    3. Custom events (no $ prefix) - classify as "custom"
+    4. Unknown - fallback to "unknown"
+    """
+    # PostHog system events
+    match event_name:
+        case "$pageview":
+            return EventClassification(event_type=EventType.pageview, action_type=ActionType.view)
+        case "$pageleave":
+            return EventClassification(event_type=EventType.navigation, action_type=ActionType.leave)
+        case "$rageclick":
+            return EventClassification(event_type=EventType.click, action_type=ActionType.rage_click)
+        case "$pageview":
+            return EventClassification(event_type=EventType.pageview, action_type=ActionType.view)
+        case "$autocapture":
+            return _classify_autocapture(properties)
+
+    if not event_name.startswith("$"):  # Custom events (no $ prefix), try to infer action from event name
+        action_type = infer_action_from_custom_event(event_name)
+        return EventClassification(event_type=EventType.custom, action_type=action_type)
+
+    return EventClassification(event_type=EventType.unknown, action_type=ActionType.unknown)
