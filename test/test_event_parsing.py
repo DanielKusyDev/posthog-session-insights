@@ -1,6 +1,6 @@
 from pytest import param, mark
 
-from app.services.enrichment_services import (
+from app.services.event_parsing import (
     parse_elements_chain,
     ParsedElements,
     classify_event,
