@@ -6,6 +6,7 @@ from app.db import get_connection
 from app.models import RawEvent
 from app.repositories.raw_event_repo import fetch_events_for_processing
 from app.services.event_services import mark_as_failed, mark_as_processing, mark_as_done
+from app.services.session_services import get_or_create_session
 
 BATCH_SIZE = 200
 WAIT_TIME = 1
@@ -25,6 +26,7 @@ async def process_single_event(connection: AsyncConnection, event: RawEvent) -> 
             await mark_as_processing(connection=connection, event_id=event.raw_event_id)
 
         # Get or create session
+        session = await get_or_create_session(connection=connection, event=event)
 
         # Enrich the event
 
