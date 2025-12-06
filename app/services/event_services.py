@@ -10,11 +10,6 @@ async def mark_as_failed(connection: AsyncConnection, event_id: str) -> None:
     await update_raw_event(connection, raw_event_id=event_id, event=input_data)
 
 
-async def mark_as_processing(connection: AsyncConnection, event_id: str) -> None:
-    input_data = RawEventUpdate(status=RawEventStatus.processing.value)
-    await update_raw_event(connection, raw_event_id=event_id, event=input_data)
-
-
 async def mark_as_done(connection: AsyncConnection, event_id: str) -> None:
     input_data = RawEventUpdate(status=RawEventStatus.done.value)
     await update_raw_event(connection, raw_event_id=event_id, event=input_data)
