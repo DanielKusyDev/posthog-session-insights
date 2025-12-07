@@ -2,11 +2,11 @@ import asyncio
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from app.db import get_connection, get_transaction
+from app.db import get_transaction
 from app.models import RawEvent
-from app.repositories.raw_event_repo import fetch_events_for_processing
-from app.services.event_services import mark_as_failed, mark_as_processing, mark_as_done
-from app.services.session_services import get_or_create_session
+from app.services.enrichment_services import enrich_event, create_enriched_event
+from app.services.event_services import mark_event_as_failed, mark_event_as_done, fetch_events_for_processing
+from app.services.session_services import get_or_create_session, update_session_activity
 
 BATCH_SIZE = 200
 WAIT_TIME = 1
@@ -25,19 +25,21 @@ async def process_single_event(connection: AsyncConnection, event: RawEvent) -> 
         session = await get_or_create_session(connection=connection, event=event)
 
         # Enrich the event
-        # enriched = await enrich_event(raw_event=event, session=session)
+        enriched_event_data = await enrich_event(event=event, session=session)
 
         # Save enriched event
-        # await create_enriched_event(conn, enriched)
+        await create_enriched_event(connection=connection, input_data=enriched_event_data)
 
         # Update session activity
-        # await update_session_activity(conn, session_id, event, enriched.event_type)
+        await update_session_activity(
+            connection=connection, session_id=session_id, event=event, enriched_event=enriched_event_data
+        )
 
         # Mark raw event as processed
-        await mark_as_done(connection, event.raw_event_id)
+        await mark_event_as_done(connection, event.raw_event_id)
 
     except Exception:
-        await mark_as_failed(connection=connection, event_id=event.raw_event_id)
+        await mark_event_as_failed(connection=connection, event_id=event.raw_event_id)  # TODO add exception details
         raise
 
 

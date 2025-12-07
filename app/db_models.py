@@ -86,9 +86,7 @@ session = Table(
     Column("first_page", String),  # Metadata for LLM context
     Column("last_page", String),
     Column("session_summary", Text),  # ~500 chars generated summary
-    # Status
     Column("is_active", Boolean, default=True, nullable=False),
-    # System timestamps
     Column("created_at", DateTime(timezone=True), server_default=func.current_timestamp()),
     Column(
         "updated_at",
@@ -96,7 +94,6 @@ session = Table(
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),
     ),
-    # Indexes
     Index("ix_session_user_started", "user_id", "started_at"),
     Index("ix_session_user_active", "user_id", "is_active"),
     Index("ix_session_active_activity", "is_active", "last_activity_at"),

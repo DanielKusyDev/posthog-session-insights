@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from app.db_models import RawEventStatus
+from app.services.event_parsing import EventType
 
 PostHogProperties = dict[str, Any]
 EnrichedContext = dict[str, Any]
@@ -30,11 +31,12 @@ class RawEvent(BaseModel):
     event_name: str
     user_id: str
     timestamp: datetime
-    created_at: datetime | None
-    updated_at: datetime | None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
     properties: PostHogProperties
-    processed_at: datetime | None
+    processed_at: datetime | None = None
     status: RawEventStatus
+    elements_chain: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -58,14 +60,15 @@ class RawEventUpdate(BaseModel):
     status: RawEventStatus | None = None
 
 
-class EnrichedEventBase(BaseModel, ABC):
-    """Common fields for all enriched event variants"""
+class EnrichedEventCreate(BaseModel):
+    """Model for creating enriched event (without auto-generated fields)"""
 
+    raw_event_id: UUID
     user_id: str
     session_id: str
     timestamp: datetime
     event_name: str
-    event_type: str
+    event_type: EventType
     semantic_label: str
     action_type: str | None = None
     page_path: str | None = None
@@ -74,22 +77,6 @@ class EnrichedEventBase(BaseModel, ABC):
     element_text: str | None = None
     context: EnrichedContext | None = None
     sequence_number: int | None = None
-
-
-class EnrichedEventCreate(EnrichedEventBase):
-    """Model for creating enriched event (without auto-generated fields)"""
-
-    raw_event_id: UUID
-
-
-class EnrichedEvent(EnrichedEventBase):
-    """Full enriched event model (with auto-generated fields)"""
-
-    enriched_event_id: UUID
-    raw_event_id: UUID
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
 
 
 class Session(BaseModel):
