@@ -1,5 +1,6 @@
-from select import select
 from sqlalchemy.ext.asyncio import AsyncConnection
+from sqlalchemy import select
+
 
 from app.db_models import session
 from app.models import RawEvent, EnrichedEventCreate
@@ -25,9 +26,9 @@ async def create_session(connection: AsyncConnection, input_data: SessionCreate)
 
 
 async def get_or_create_session(connection: AsyncConnection, event: RawEvent) -> Session:
-    session = await fetch_session(connection=connection, session_id=event.session_id)
+    session_ = await fetch_session(connection=connection, session_id=event.session_id)
 
-    if not session:
+    if not session_:
         new_session = SessionCreate(
             session_id=event.session_id,
             user_id=event.user_id,
@@ -36,8 +37,8 @@ async def get_or_create_session(connection: AsyncConnection, event: RawEvent) ->
             first_page=event.page_path,
             is_active=True,
         )
-        session = await create_session(connection=connection, input_data=new_session)
-    return session
+        session_ = await create_session(connection=connection, input_data=new_session)
+    return session_
 
 
 async def update_session_activity(

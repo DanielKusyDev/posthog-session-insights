@@ -1,49 +1,6 @@
 import re
-from enum import Enum
 
-from pydantic import BaseModel
-
-from app.models import PostHogProperties
-
-
-class EventType(str, Enum):
-    """High-level event category"""
-
-    pageview = "pageview"
-    click = "click"
-    navigation = "navigation"
-    custom = "custom"
-    unknown = "unknown"
-
-
-class ActionType(str, Enum):
-    """Specific user action"""
-
-    view = "view"
-    leave = "leave"
-    click = "click"
-    rage_click = "rage_click"
-    submit = "submit"
-    change = "change"
-    navigate = "navigate"
-    unknown = "unknown"
-
-
-class ParsedElements(BaseModel):
-    element_type: str | None = None
-    element_text: str | None = None
-    attributes: dict[str, str] = {}
-    hierarchy: list[str] = []
-
-
-class EventClassification(BaseModel):
-    event_type: EventType
-    action_type: ActionType
-
-
-class PageInfo(BaseModel):
-    page_path: str
-    page_title: str
+from app.models import PostHogProperties, EventType, ParsedElements, EventClassification, ActionType, PageInfo
 
 
 def parse_elements_chain(chain: str) -> ParsedElements:

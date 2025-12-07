@@ -1,15 +1,54 @@
-from abc import ABC
 from datetime import datetime
+from enum import Enum
 from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel
 
 from app.db_models import RawEventStatus
-from app.services.event_parsing import EventType
 
 PostHogProperties = dict[str, Any]
 EnrichedContext = dict[str, Any]
+
+
+class EventType(str, Enum):
+    """High-level event category"""
+
+    pageview = "pageview"
+    click = "click"
+    navigation = "navigation"
+    custom = "custom"
+    unknown = "unknown"
+
+
+class ActionType(str, Enum):
+    """Specific user action"""
+
+    view = "view"
+    leave = "leave"
+    click = "click"
+    rage_click = "rage_click"
+    submit = "submit"
+    change = "change"
+    navigate = "navigate"
+    unknown = "unknown"
+
+
+class ParsedElements(BaseModel):
+    element_type: str | None = None
+    element_text: str | None = None
+    attributes: dict[str, str] = {}
+    hierarchy: list[str] = []
+
+
+class EventClassification(BaseModel):
+    event_type: EventType
+    action_type: ActionType
+
+
+class PageInfo(BaseModel):
+    page_path: str
+    page_title: str
 
 
 class PostHogEvent(BaseModel):  # TODO consider renaming to "RawEventCreate"
@@ -27,7 +66,7 @@ class PostHogEvent(BaseModel):  # TODO consider renaming to "RawEventCreate"
 class RawEvent(BaseModel):
     """Internal, raw event version of posthog event, with better structure and job status tracking properties."""
 
-    raw_event_id: str
+    raw_event_id: UUID
     event_name: str
     user_id: str
     timestamp: datetime

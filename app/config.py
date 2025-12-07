@@ -3,6 +3,7 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 BASE_DIR = Path(__name__).parent.parent
 
@@ -29,9 +30,16 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=BASE_DIR / ".env")
 
 
-settings: Settings | None = None
+_settings: Settings | None = None
 
 
-async def init_settings() -> None:
-    global settings
-    settings = Settings()
+def get_settings() -> Settings:
+    if _settings is None:
+        raise RuntimeError("Settings not initialized. Call init_settings() first.")
+    return _settings
+
+
+def init_settings() -> None:
+    global _settings
+
+    _settings = Settings()

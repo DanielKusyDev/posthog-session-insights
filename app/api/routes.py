@@ -4,7 +4,7 @@ from starlette.responses import Response
 
 from app.api.dependencies import DbTransaction
 from app.models import PostHogEvent
-from app.repositories.raw_event_repo import insert_raw_event
+from app.services.event_services import insert_raw_event
 
 router = APIRouter()
 

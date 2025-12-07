@@ -9,7 +9,7 @@ from app.db import init_db
 
 @asynccontextmanager
 async def lifespan(app_: FastAPI):
-    await init_settings()
+    init_settings()
     await init_db()
     yield
 

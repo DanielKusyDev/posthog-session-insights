@@ -16,7 +16,7 @@ async def create_enriched_event(connection: AsyncConnection, input_data: Enriche
 
 async def enrich_event(event: RawEvent, session: Session) -> EnrichedEventCreate:
     element_info = parse_elements_chain(chain=event.elements_chain)
-    classification = classify_event(event_name=event.name, properties=event.properties)
+    classification = classify_event(event_name=event.event_name, properties=event.properties)
     page_info = extract_page_info(properties=event.properties)
     semantic_label = _label_builder.build(
         event_type=classification.event_type,

@@ -1,4 +1,6 @@
 from typing import Any
+from uuid import UUID
+
 from app.models import PostHogProperties
 from app.services.event_parsing import ParsedElements
 from app.utils import hyphens_to_snake_case
@@ -30,8 +32,8 @@ async def insert_raw_event(connection: AsyncConnection, event: PostHogEvent) -> 
     await connection.execute(stmt)
 
 
-async def update_raw_event(connection: AsyncConnection, raw_event_id: str, event: RawEventUpdate) -> None:
-    stmt = raw_event.update().values(**event.model_dump()).where(raw_event.c.raw_event_id == raw_event_id)
+async def update_raw_event_status(connection: AsyncConnection, raw_event_id: UUID, status: RawEventStatus) -> None:
+    stmt = raw_event.update().values(status=status).where(raw_event.c.raw_event_id == raw_event_id)
     await connection.execute(stmt)
 
 
@@ -48,14 +50,13 @@ async def fetch_events_for_processing(connection: AsyncConnection, batch_size: i
     return [RawEvent.model_validate(event) for event in rows]
 
 
-async def mark_event_as_failed(connection: AsyncConnection, event_id: str) -> None:
-    input_data = RawEventUpdate(status=RawEventStatus.failed.value)
-    await update_raw_event(connection, raw_event_id=event_id, event=input_data)
+async def mark_event_as_failed(connection: AsyncConnection, event_id: UUID) -> None:
+    await update_raw_event_status(connection, raw_event_id=event_id, status=RawEventStatus.failed)
 
 
-async def mark_event_as_done(connection: AsyncConnection, event_id: str) -> None:
+async def mark_event_as_done(connection: AsyncConnection, event_id: UUID) -> None:
     input_data = RawEventUpdate(status=RawEventStatus.done.value)
-    await update_raw_event(connection, raw_event_id=event_id, event=input_data)
+    await update_raw_event_status(connection, raw_event_id=event_id, status=RawEventStatus.done)
 
 
 async def build_context(event_name: str, properties: PostHogProperties, element_info: ParsedElements) -> dict[str, Any]:

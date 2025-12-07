@@ -64,7 +64,6 @@ enriched_event = Table(
     Column("page_title", String),  # "PostHog Demo Website"
     Column("element_type", String),  # "button", "img", "input"
     Column("element_text", String),  # "Shop", "FPV Speedster"
-    Column("element_selector", String),  # "button[nav='home']" - uproszczona wersja
     Column("context", JSON),  # {product_id, product_name, nav_target, url, hierarchy}
     Column("sequence_number", Integer),
     Index("ix_enriched_user_timestamp", "user_id", "timestamp"),
