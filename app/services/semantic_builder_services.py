@@ -119,8 +119,7 @@ class SemanticLabelBuilder:
             except KeyError:
                 pass  # Missing property, fall through to humanize
 
-        # Fallback: humanize event name
-        return humanize_snake_case_string(event_name)
+        return humanize_snake_case_string(event_name).lower()
 
     def _build_fallback_label(self, page_info: PageInfo) -> str:
         """Ultimate fallback for unknown event types."""
