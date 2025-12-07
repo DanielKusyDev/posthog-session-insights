@@ -7,7 +7,7 @@ def truncate_text(text: str, max_length: int) -> str:
     if len(text) <= max_length:
         return text
 
-    return text[: max_length - 3] + "..."
+    return text[: max(max_length - 3, 0)] + "..."
 
 
 def capitalize_first_letter(text: str) -> str:
@@ -26,4 +26,15 @@ def humanize_snake_case_string(text: str) -> str:
         "product_clicked" → "product clicked"
         "plan_upgrade_started" → "plan upgrade started"
     """
-    return text.replace("_", " ").lower()
+    return text.replace("_", " ")
+
+
+def hyphens_to_snake_case(text: str) -> str:
+    """
+    Convert hyphen-delimited string to snake_case.
+
+    Examples:
+        "product-clicked" → "product_clicked"
+        "plan-upgrade-started" → "plan_upgrade_started"
+    """
+    return text.replace("-", "_")
