@@ -1,5 +1,9 @@
+import json
+
 from fastapi import APIRouter
+from pydantic import BaseModel
 from starlette import status
+from starlette.requests import Request
 from starlette.responses import Response
 
 from app.api.dependencies import DbTransaction
@@ -13,9 +17,19 @@ from app.services.query_services import fetch_latest_session, fetch_recent_event
 router = APIRouter()
 
 
+# PostHog payload format is configurable in their panel but this, single-field format is the simplest
+class PostHogWebhookPayload(BaseModel):
+    event: PostHogEvent
+
+
+@router.get("/health")
+def health() -> str:
+    return "OK"
+
+
 @router.post("/ingest")
-async def ingest(input_data: PostHogEvent, db: DbTransaction) -> Response:
-    await insert_raw_event(connection=db, event=input_data)
+async def ingest(request: Request, db: DbTransaction, data: PostHogWebhookPayload) -> Response:
+    await insert_raw_event(connection=db, event=data.event)
     return Response(status_code=status.HTTP_202_ACCEPTED)
 
 
