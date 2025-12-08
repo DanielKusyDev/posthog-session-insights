@@ -1,21 +1,35 @@
 import asyncio
+import logging
+import signal
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from app.db import get_transaction
+from app import init_settings
+from app.db import get_transaction, init_db, get_connection
 from app.models import RawEvent
 from app.services.enrichment_services import enrich_event, create_enriched_event
-from app.services.event_services import mark_event_as_failed, mark_event_as_done, fetch_events_for_processing
+from app.services.event_services import mark_event_as_failed, mark_event_as_done
+from app.services.query_services import fetch_events_for_processing
 from app.services.session_services import get_or_create_session, update_session_activity
 
 BATCH_SIZE = 200
 WAIT_TIME = 1
 
+semaphore = asyncio.Semaphore(10)
+shutdown_event = asyncio.Event()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler()],
+)
+
+logger = logging.getLogger(__name__)
+
 
 async def process_single_event(connection: AsyncConnection, event: RawEvent) -> None:
     """Process a single raw event through the pipeline"""
-
-    try:
+    async with connection.begin():
         # Extract session_id from PostHog properties
         session_id = event.session_id
         if not session_id:
@@ -36,31 +50,61 @@ async def process_single_event(connection: AsyncConnection, event: RawEvent) -> 
         )
 
         # Mark raw event as processed
-        await mark_event_as_done(connection, event.raw_event_id)
-
-    except Exception:
-        await mark_event_as_failed(connection=connection, event_id=event.raw_event_id)  # TODO add exception details
-        raise
+        await mark_event_as_done(connection=connection, event_id=event.raw_event_id)
 
 
-async def process_batch(conn: AsyncConnection) -> int:
-    raw_events = await fetch_events_for_processing(conn, batch_size=BATCH_SIZE)
+async def process_with_semaphore(event_: RawEvent) -> None:
+    async with semaphore:
+        async with get_connection() as connection:
+            try:
+                await process_single_event(connection, event_)
+            except Exception as e:
+                try:
+                    async with connection.begin():
+                        await mark_event_as_failed(connection, event_.raw_event_id)
+                except Exception:
+                    pass
+                logger.error(f"Failed to process {event_.raw_event_id}: {e}")
+
+
+async def process_batch() -> int:
+    async with get_transaction() as conn:
+        raw_events = await fetch_events_for_processing(conn, batch_size=BATCH_SIZE)
+
     if not raw_events:
         return 0
 
-    for event in raw_events:
-        await process_single_event(conn, event)
-
+    logger.info("Processing %s events...", len(raw_events))
+    async with asyncio.TaskGroup() as tg:
+        for event in raw_events:
+            tg.create_task(process_with_semaphore(event))
     return len(raw_events)
 
 
+def handle_shutdown(signum, frame):
+    logger.info(f"Received signal {signum}, shutting down gracefully...")
+    shutdown_event.set()
+
+
 async def main() -> None:
-    while True:
-        async with get_transaction() as conn:
-            processed = await process_batch(conn)
+    init_settings()
+    await init_db()
+
+    # Register signal handlers
+    signal.signal(signal.SIGTERM, handle_shutdown)
+    signal.signal(signal.SIGINT, handle_shutdown)
+
+    while not shutdown_event.is_set():
+        processed = await process_batch()
 
         if processed == 0:
-            await asyncio.sleep(WAIT_TIME)
+            logger.info("No jobs to process. Sleeping...")
+            try:
+                await asyncio.wait_for(shutdown_event.wait(), timeout=WAIT_TIME)
+            except asyncio.TimeoutError:
+                pass  # Continue loop
+
+    logger.info("Worker shut down gracefully")
 
 
 if __name__ == "__main__":
