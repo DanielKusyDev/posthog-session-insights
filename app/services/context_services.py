@@ -1,6 +1,6 @@
 from typing import Any, Sequence
 
-from app.config import CONTEXT_EXCLUDE_KEYS, get_settings
+from app.config import CONTEXT_EXCLUDE_KEYS, SETTINGS
 from app.models import ActionType, EnrichedEvent, EventType, PostHogProperties
 from app.services.event_parsing import ParsedElements
 from app.utils import hyphens_to_snake_case
@@ -37,7 +37,6 @@ async def build_context(
 
 
 async def generate_events_summary(events: list[EnrichedEvent]) -> str:
-    settings = get_settings()
     """Generate human-readable session summary from session and events. Pure function, no DB queries."""
     if not events:
         return "No activity recorded"
@@ -55,7 +54,7 @@ async def generate_events_summary(events: list[EnrichedEvent]) -> str:
         if e.page_title and e.page_title not in seen_pages:
             unique_pages.append(e.page_title)
             seen_pages.add(e.page_title)
-        if len(unique_pages) >= settings.pages_in_summary_limit:
+        if len(unique_pages) >= SETTINGS.pages_in_summary_limit:
             break
 
     # Build summary parts

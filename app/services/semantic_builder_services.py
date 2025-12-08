@@ -1,19 +1,6 @@
+from app.config import SETTINGS
 from app.services.event_parsing import ActionType, EventType, PageInfo, ParsedElements
 from app.utils import capitalize_first_letter, humanize_snake_case_string, truncate_text
-
-DEFAULT_CUSTOM_EVENT_TEMPLATES: dict[str, str] = {  # TODO move to the database
-    "product_clicked": "Selected product: {product_name}",
-    "plan_upgrade_started": "Started plan upgrade",
-    "plan_upgrade_completed": "Completed plan upgrade to {plan_name}",
-    "form_submitted": "Submitted {form_name} form",
-}
-DEFAULT_ELEMENT_ENRICHMENT_RULES: dict[str, str] = {  # TODO move to the database
-    "nav": "navigation {base_type}",
-    "product-id": "product card",
-    "product-name": "product card",
-    "form-id": "{base_type} in form",
-}
-SEMANTIC_LABEL_MAX_LENGTH = 150
 
 
 class SemanticLabelBuilder:
@@ -27,10 +14,10 @@ class SemanticLabelBuilder:
         self,
         custom_templates: dict[str, str] | None = None,
         enrichment_rules: dict[str, str] | None = None,
-        max_length: int = SEMANTIC_LABEL_MAX_LENGTH,
+        max_length: int = SETTINGS.semantic_label_max_length,
     ):
-        self.enrichment_rules = enrichment_rules or DEFAULT_ELEMENT_ENRICHMENT_RULES
-        self.custom_templates = custom_templates or DEFAULT_CUSTOM_EVENT_TEMPLATES
+        self.enrichment_rules = enrichment_rules or SETTINGS.default_enrichment_rules
+        self.custom_templates = custom_templates or SETTINGS.default_custom_event_templates
         self.max_length = max_length
 
     def build(

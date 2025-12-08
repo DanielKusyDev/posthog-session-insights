@@ -4,7 +4,7 @@ from typing import AsyncIterator
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
-from app.config import get_settings
+from app.config import SETTINGS
 
 metadata = MetaData()
 
@@ -19,8 +19,7 @@ def get_engine() -> AsyncEngine:
 
 async def init_db() -> None:
     global _engine
-    settings = get_settings()
-    _engine = create_async_engine(settings.sqlalchemy_url, echo=False, future=True)
+    _engine = create_async_engine(SETTINGS.sqlalchemy_url, echo=False, future=True)
 
 
 @asynccontextmanager

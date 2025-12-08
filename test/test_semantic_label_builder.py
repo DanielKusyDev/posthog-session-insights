@@ -147,16 +147,6 @@ from app.services.semantic_builder_services import SemanticLabelBuilder
             "Selected product: FPV Speedster",
             id="custom_with_template",
         ),
-        param(
-            EventType.custom,
-            ActionType.navigate,
-            PageInfo(page_path="/billing", page_title="billing page"),
-            ParsedElements(),
-            "plan_upgrade_started",
-            {},
-            "Started plan upgrade",
-            id="custom_template_no_params",
-        ),
         # Custom events without template (humanized)
         param(
             EventType.custom,

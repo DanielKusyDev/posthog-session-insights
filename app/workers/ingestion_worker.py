@@ -4,7 +4,6 @@ import signal
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from app import init_settings
 from app.db import get_connection, get_transaction, init_db
 from app.models import RawEvent
 from app.services.enrichment_services import enrich_event
@@ -89,7 +88,6 @@ def handle_shutdown(signum, frame):
 
 
 async def main() -> None:
-    init_settings()
     await init_db()
 
     # Register signal handlers

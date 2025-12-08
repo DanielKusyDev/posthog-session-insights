@@ -13,13 +13,30 @@ BASE_DIR = Path(__name__).parent.parent
 
 class Settings(BaseSettings):
     db_driver: str = Field("postgresql+asyncpg", description="SQLAlchemy DB driver")
-    db_user: str = Field()
-    db_password: str = Field()
-    db_host: str = Field()
-    db_port: int = Field()
-    db_name: str = Field()
+    db_user: str = Field("")
+    db_password: str = Field("")
+    db_host: str = Field("")
+    db_port: int = Field("")
+    db_name: str = Field("")
 
-    pages_in_summary_limit: int = 3
+    pages_in_summary_limit: int = Field(3, description="Max number of visited pages included in short session summary.")
+    semantic_label_max_length: int = Field(150, description="Max length of the semantic label.")
+    default_custom_event_templates: dict[str, str] = Field(
+        {
+            "product_clicked": "Selected product: {product_name}",
+            "form_submitted": "Submitted {form_name} form",
+        },
+        description="Event templates for custom events.",
+    )
+    default_enrichment_rules: dict[str, str] = Field(
+        {
+            "nav": "navigation {base_type}",
+            "product-id": "product card",
+            "product-name": "product card",
+            "form-id": "{base_type} in form",
+        },
+        description="Default ",
+    )
 
     @property
     def sqlalchemy_url(self) -> URL:
@@ -35,22 +52,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=BASE_DIR / ".env")
 
 
-_settings: Settings | None = None
+SETTINGS = Settings()
 
 
-def get_settings() -> Settings:
-    if _settings is None:
-        raise RuntimeError("Settings not initialized. Call init_settings() first.")
-    return _settings
-
-
-def init_settings() -> None:
-    global _settings
-
-    _settings = Settings()
-
-
-PATTERN_RULES: list[PatternRule] = [
+PATTERN_RULES: list[PatternRule] = [  # These should definitely come from the database
     # High-severity patterns (conversion blockers)
     PatternRule(
         code="checkout_abandoned",
