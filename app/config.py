@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     db_port: int = Field()
     db_name: str = Field()
 
+    pages_in_summary_limit: int = 3
+
     @property
     def sqlalchemy_url(self) -> URL:
         return URL.create(
@@ -150,4 +152,4 @@ PATTERN_RULES: list[PatternRule] = [
 ]
 
 
-CONTEXT_EXCLUDE_KEYS: set[str] = {"token", "distinct_id"}
+CONTEXT_EXCLUDE_KEYS = ("token", "distinct_id")

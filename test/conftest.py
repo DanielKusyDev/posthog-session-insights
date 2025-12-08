@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from app import init_settings
 from test.helpers import AsyncContextManagerMock
 from unittest.mock import AsyncMock
 from uuid import uuid4
@@ -50,6 +52,7 @@ def sample_enriched_event() -> EnrichedEventCreate:
 def setup(session_mocker: MockerFixture) -> None:
     session_mocker.patch("app.db.init_db", side_effect=AsyncMock())  # Make sure not to use real db, even by mistake
     session_mocker.patch("app.db.get_engine", side_effect=AsyncMock())
+    init_settings()
 
 
 @pytest.fixture

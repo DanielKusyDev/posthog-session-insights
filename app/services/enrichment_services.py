@@ -1,4 +1,4 @@
-from app.models import EnrichedEvent, RawEvent, Session
+from app.models import RawEvent, Session, EnrichedEventCreate
 from app.services.context_services import build_context
 from app.services.event_parsing import classify_event, extract_page_info, parse_elements_chain
 from app.services.semantic_builder_services import SemanticLabelBuilder
@@ -6,7 +6,7 @@ from app.services.semantic_builder_services import SemanticLabelBuilder
 _label_builder = SemanticLabelBuilder()
 
 
-async def enrich_event(event: RawEvent, session: Session) -> EnrichedEvent:
+async def enrich_event(event: RawEvent, session: Session) -> EnrichedEventCreate:
     element_info = parse_elements_chain(chain=event.elements_chain)
     classification = classify_event(event_name=event.event_name, properties=event.properties)
     page_info = extract_page_info(properties=event.properties)
@@ -22,7 +22,7 @@ async def enrich_event(event: RawEvent, session: Session) -> EnrichedEvent:
     context = await build_context(event_name=event.event_name, properties=event.properties, element_info=element_info)
     sequence_number = session.event_count + 1
 
-    return EnrichedEvent(
+    return EnrichedEventCreate(
         raw_event_id=event.raw_event_id,
         user_id=event.user_id,
         session_id=session.session_id,

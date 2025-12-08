@@ -1,12 +1,17 @@
-from typing import Any
+from typing import Any, Sequence
 
-from app.config import CONTEXT_EXCLUDE_KEYS
+from app.config import CONTEXT_EXCLUDE_KEYS, get_settings
 from app.models import ActionType, EnrichedEvent, EventType, PostHogProperties
 from app.services.event_parsing import ParsedElements
 from app.utils import hyphens_to_snake_case
 
 
-async def build_context(event_name: str, properties: PostHogProperties, element_info: ParsedElements) -> dict[str, Any]:
+async def build_context(
+    event_name: str,
+    properties: PostHogProperties,
+    element_info: ParsedElements,
+    excluded_keys: Sequence[str] = CONTEXT_EXCLUDE_KEYS,
+) -> dict[str, Any]:
     """
     Build context dict with additional metadata for LLM.
 
@@ -14,9 +19,7 @@ async def build_context(event_name: str, properties: PostHogProperties, element_
     filtering out PostHog internal fields.
     """
     # Skip blacklisted PostHog properties
-    context = {
-        key: value for key, value in properties.items() if not key.startswith("$") and key not in CONTEXT_EXCLUDE_KEYS
-    }
+    context = {key: value for key, value in properties.items() if not key.startswith("$") and key not in excluded_keys}
 
     # Add custom attributes from elements_chain
     for attr_name, attr_value in element_info.attributes.items():
@@ -34,6 +37,7 @@ async def build_context(event_name: str, properties: PostHogProperties, element_
 
 
 async def generate_events_summary(events: list[EnrichedEvent]) -> str:
+    settings = get_settings()
     """Generate human-readable session summary from session and events. Pure function, no DB queries."""
     if not events:
         return "No activity recorded"
@@ -44,25 +48,22 @@ async def generate_events_summary(events: list[EnrichedEvent]) -> str:
     rage_clicks = [e for e in events if e.action_type == ActionType.rage_click]
     custom_events = [e for e in events if e.event_type == EventType.custom]
 
-    # Extract unique pages (top 3)
+    # Extract unique pages (max settings.pages_in_summary_limit)
     unique_pages = []
     seen_pages = set()
     for e in page_views:
         if e.page_title and e.page_title not in seen_pages:
             unique_pages.append(e.page_title)
             seen_pages.add(e.page_title)
-        if len(unique_pages) >= 3:
+        if len(unique_pages) >= settings.pages_in_summary_limit:
             break
 
     # Build summary parts
     parts = []
 
-    if page_views:
-        if unique_pages:
-            pages_text = ", ".join(unique_pages)
-            parts.append(f"Viewed {len(page_views)} pages including {pages_text}")
-        else:
-            parts.append(f"Viewed {len(page_views)} pages")
+    if unique_pages:
+        pages_text = ", ".join(unique_pages)
+        parts.append(f"Viewed {len(page_views)} pages including {pages_text}")
 
     if clicks:
         parts.append(f"Clicked {len(clicks)} times")
@@ -74,7 +75,7 @@ async def generate_events_summary(events: list[EnrichedEvent]) -> str:
         parts.append(f"Triggered {len(custom_events)} custom events")
 
     if not parts:
-        return "No significant activity"
+        parts = ["No significant activity"]
 
     summary = ". ".join(parts)
     if not summary.endswith("."):
