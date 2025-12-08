@@ -1,5 +1,7 @@
-version: "3.7"
+version: "3.8"
+
 services:
+  # Database
   postgres:
     image: postgres:18-alpine
     restart: always
@@ -8,17 +10,24 @@ services:
       POSTGRES_PASSWORD: posthog
       POSTGRES_DB: posthog
     ports:
-      - 5432:5432
-    expose:
-      - "5432"
+      - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data:cached
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # FastAPI Backend
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: on-failure
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       DB_DRIVER: "postgresql+asyncpg"
       DB_USER: "postgres"
@@ -27,7 +36,34 @@ services:
       DB_PORT: 5432
       DB_NAME: "posthog"
     ports:
-      - 8000:8000
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Remove command - use entrypoint.sh from Dockerfile
+
+  # Ingestion Worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    environment:
+      DB_DRIVER: "postgresql+asyncpg"
+      DB_USER: "postgres"
+      DB_PASSWORD: "posthog"
+      DB_HOST: "postgres"
+      DB_PORT: 5432
+      DB_NAME: "posthog"
+    command: python -m app.workers.ingestion_worker
 
 volumes:
   db-data:
