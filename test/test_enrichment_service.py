@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pytest import param, mark
 from app.services.event_parsing import ParsedElements
 from app.models import RawEvent
@@ -103,7 +105,7 @@ async def test_build_context(
     """Test context building from event properties and element info"""
     # Create mock RawEvent
     raw_event = RawEvent(
-        raw_event_id="test-id",
+        raw_event_id=UUID('12345678123456781234567812345678'),
         event_name=event_name or "test",
         user_id="user-123",
         timestamp="2025-01-01T00:00:00Z",
@@ -119,7 +121,7 @@ async def test_build_context(
 async def test_build_context_attribute_override() -> None:
     """Test that element attributes override properties with same key"""
     raw_event = RawEvent(
-        raw_event_id="test-id",
+        raw_event_id=UUID('12345678123456781234567812345678'),
         event_name="click",
         user_id="user-123",
         timestamp="2025-01-01T00:00:00Z",
