@@ -2,8 +2,8 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from app.db_models import session, raw_event, enriched_event
-from app.models import EnrichedEvent, RawEvent, Session, SessionCreate, PostHogEvent, RawEventStatus
+from app.db_models import enriched_event, raw_event, session
+from app.models import EnrichedEvent, PostHogEvent, RawEvent, RawEventStatus, Session, SessionCreate
 from app.services.event_parsing import EventType
 from app.services.query_services import fetch_session
 

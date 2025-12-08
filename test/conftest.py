@@ -4,9 +4,13 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
+from fastapi import FastAPI
 from pytest_mock import MockerFixture
 from sqlalchemy.ext.asyncio import AsyncConnection
+from starlette.testclient import TestClient
 
+from app.api.dependencies import get_transaction_dependency
+from app.api.routes import router
 from app.models import EnrichedEventCreate, RawEvent, RawEventStatus, Session
 
 
@@ -19,43 +23,6 @@ def mock_connection() -> AsyncMock:
     conn.begin = lambda: AsyncContextManagerMock(return_value=conn)
 
     return conn
-
-
-@pytest.fixture
-def sample_raw_event() -> RawEvent:
-    """Sample raw event with valid data"""
-    return RawEvent(
-        raw_event_id=str(uuid4()),
-        event_name="$pageview",
-        user_id="user-123",
-        timestamp=datetime.utcnow(),
-        properties={
-            "$session_id": "session-456",
-            "$pathname": "/home",
-            "title": "Home Page",
-        },
-        status=RawEventStatus.pending,
-        elements_chain=None,
-    )
-
-
-@pytest.fixture
-def sample_session() -> Session:
-    """Sample session"""
-    return Session(
-        session_id="session-456",
-        user_id="user-123",
-        started_at=datetime.utcnow(),
-        last_activity_at=datetime.utcnow(),
-        event_count=5,
-        page_views_count=2,
-        clicks_count=3,
-        first_page="/home",
-        last_page="/about",
-        is_active=True,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
-    )
 
 
 @pytest.fixture
@@ -83,3 +50,20 @@ def sample_enriched_event() -> EnrichedEventCreate:
 def setup(session_mocker: MockerFixture) -> None:
     session_mocker.patch("app.db.init_db", side_effect=AsyncMock())  # Make sure not to use real db, even by mistake
     session_mocker.patch("app.db.get_engine", side_effect=AsyncMock())
+
+
+@pytest.fixture
+def client() -> TestClient:
+    """FastAPI test client"""
+
+    async def override_get_transaction():
+        mock_conn = AsyncMock()
+        yield mock_conn
+
+    app = FastAPI()
+    app.include_router(router)
+
+    app.dependency_overrides[get_transaction_dependency] = override_get_transaction
+
+    # Create test client (synchronous!)
+    return TestClient(app)

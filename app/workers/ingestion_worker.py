@@ -9,10 +9,11 @@ from app.db import get_connection, get_transaction, init_db
 from app.models import RawEvent
 from app.services.enrichment_services import enrich_event
 from app.services.persist_services import (
-    get_or_create_session,
     create_enriched_event,
+    get_or_create_session,
+    mark_event_as_done,
+    mark_event_as_failed,
     update_session_activity,
-    mark_event_as_done, mark_event_as_failed,
 )
 from app.services.query_services import fetch_events_for_processing
 

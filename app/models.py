@@ -195,5 +195,5 @@ class Pattern(BaseModel):
 
 class UserContext(BaseModel):
     recent_events: list[EnrichedEvent]
-    last_session_summary: str
+    last_session_summary: str | None
     patterns: list[Pattern]

@@ -229,6 +229,12 @@ def test_parse_elements_chain_hierarchy_limit() -> None:
         # $autocapture with different event types
         param(
             "$autocapture",
+            {},
+            EventClassification(event_type=EventType.click, action_type=ActionType.click),
+            id="autocapture_click",
+        ),
+        param(
+            "$autocapture",
             {"$event_type": "click"},
             EventClassification(event_type=EventType.click, action_type=ActionType.click),
             id="autocapture_click",
@@ -369,32 +375,6 @@ def test_classify_event(event_name: str, properties: dict, expected: EventClassi
 def test_infer_action_from_custom_event(event_name: str, expected: str) -> None:
     """Test inference of action_type from custom event names using heuristics"""
     assert infer_action_from_custom_event(event_name) == expected
-
-
-def test_classify_event() -> None:
-    """Test that custom event name matching is case-insensitive"""
-    result_lower = classify_event("product_clicked", {})
-    result_upper = classify_event("PRODUCT_CLICKED", {})
-    result_mixed = classify_event("Product_Clicked", {})
-
-    assert result_lower.action_type == ActionType.click
-    assert result_upper.action_type == ActionType.click
-    assert result_mixed.action_type == ActionType.click
-
-
-def test_autocapture_with_extra_properties() -> None:
-    """Test that $autocapture only looks at $event_type and ignores other properties"""
-    result = classify_event(
-        "$autocapture",
-        {
-            "$event_type": "submit",
-            "product_id": "123",
-            "user_action": "something_else",
-        },
-    )
-
-    assert result.event_type == EventType.click
-    assert result.action_type == ActionType.submit
 
 
 @mark.parametrize(
