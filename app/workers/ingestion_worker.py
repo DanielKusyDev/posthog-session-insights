@@ -59,11 +59,8 @@ async def process_with_semaphore(event_: RawEvent) -> None:
             try:
                 await process_single_event(connection, event_)
             except Exception as e:
-                try:
-                    async with connection.begin():
-                        await mark_event_as_failed(connection, event_.raw_event_id)
-                except Exception:
-                    pass
+                async with connection.begin():
+                    await mark_event_as_failed(connection, event_.raw_event_id)
                 logger.error(f"Failed to process {event_.raw_event_id}: {e}")
 
 

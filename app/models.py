@@ -5,10 +5,20 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from app.db_models import RawEventStatus
-
 PostHogProperties = dict[str, Any]
 EnrichedContext = dict[str, Any]
+
+
+class Severity(str, Enum):
+    low = "LOW"
+    medium = "MEDIUM"
+    high = "HIGH"
+
+
+class RawEventStatus(str, Enum):
+    pending = "PENDING"
+    done = "DONE"
+    failed = "FAILED"
 
 
 class EventType(str, Enum):
@@ -49,12 +59,6 @@ class EventClassification(BaseModel):
 class PageInfo(BaseModel):
     page_path: str
     page_title: str
-
-
-class Severity(str, Enum):
-    low = "LOW"
-    medium = "MEDIUM"
-    high = "HIGH"
 
 
 class PostHogEvent(BaseModel):  # TODO consider renaming to "RawEventCreate"
@@ -105,7 +109,7 @@ class RawEventUpdate(BaseModel):
     status: RawEventStatus | None = None
 
 
-class EnrichedEvent(BaseModel):
+class EnrichedEventCreate(BaseModel):
     raw_event_id: UUID
     user_id: str
     session_id: str
@@ -120,6 +124,12 @@ class EnrichedEvent(BaseModel):
     element_text: str | None = None
     context: EnrichedContext | None = None
     sequence_number: int | None = None
+
+
+class EnrichedEvent(EnrichedEventCreate):
+    enriched_event_id: UUID
+
+    model_config = {"from_attributes": True}
 
 
 class Session(BaseModel):
@@ -153,3 +163,37 @@ class SessionCreate(BaseModel):
     first_page: str | None = None
     is_active: bool = True
 
+
+class SessionContext(BaseModel):
+    """Session metadata for pattern detection"""
+
+    session_id: str
+    user_id: str
+    started_at: datetime
+    ended_at: datetime | None
+    duration: timedelta | None  # None if session still active
+    event_count: int
+    page_views_count: int
+    clicks_count: int
+    first_page: str | None = None
+    last_page: str | None = None
+    is_active: bool
+
+    @property
+    def duration_seconds(self) -> float | None:
+        """Session duration in seconds"""
+        if self.duration:
+            return self.duration.total_seconds()
+        return None
+
+
+class Pattern(BaseModel):
+    code: str
+    description: str
+    severity: Severity
+
+
+class UserContext(BaseModel):
+    recent_events: list[EnrichedEvent]
+    last_session_summary: str
+    patterns: list[Pattern]

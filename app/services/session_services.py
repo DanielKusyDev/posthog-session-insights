@@ -1,20 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncConnection
-from sqlalchemy import select
-
 
 from app.db_models import session
-from app.models import RawEvent, EnrichedEventCreate
+from app.models import RawEvent, EnrichedEvent
 from app.models import Session, SessionCreate
 from app.services.event_parsing import EventType
-
-
-async def fetch_session(connection: AsyncConnection, session_id: str) -> Session | None:
-    stmt = select(session).where(session.c.session_id == session_id)
-    result = await connection.execute(stmt)
-    row = result.fetchone()
-    if row:
-        return Session.model_validate(row)
-    return None
+from app.services.query_services import fetch_session
 
 
 async def create_session(connection: AsyncConnection, input_data: SessionCreate) -> Session:
@@ -42,7 +32,7 @@ async def get_or_create_session(connection: AsyncConnection, event: RawEvent) ->
 
 
 async def update_session_activity(
-    connection: AsyncConnection, session_id: str, event: RawEvent, enriched_event: EnrichedEventCreate
+    connection: AsyncConnection, session_id: str, event: RawEvent, enriched_event: EnrichedEvent
 ) -> None:
     """Update session statistics after processing an event."""
     values = {

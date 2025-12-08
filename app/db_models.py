@@ -16,13 +16,7 @@ from sqlalchemy import (
 from sqlalchemy.sql import func
 
 from app.db import metadata
-
-
-class RawEventStatus(str, Enum):
-    pending = "PENDING"
-    done = "DONE"
-    failed = "FAILED"
-
+from app.models import RawEventStatus
 
 raw_event = Table(
     "raw_event",
@@ -56,15 +50,15 @@ enriched_event = Table(
     Column("session_id", String, nullable=False),
     Column("timestamp", DateTime(timezone=True), nullable=False),
     Column("created_at", DateTime(timezone=True), server_default=func.current_timestamp()),
-    Column("event_name", String, nullable=False),  # "$pageview", "product_clicked"
-    Column("event_type", String, nullable=False),  # "pageview", "click", "custom"
-    Column("semantic_label", String, nullable=False),  # "Clicked 'Shop' navigation button"
-    Column("action_type", String),  # "view", "click", "navigate", "rage_click"
-    Column("page_path", String),  # "/", "/about", "/billing"
-    Column("page_title", String),  # "PostHog Demo Website"
-    Column("element_type", String),  # "button", "img", "input"
-    Column("element_text", String),  # "Shop", "FPV Speedster"
-    Column("context", JSON),  # {product_id, product_name, nav_target, url, hierarchy}
+    Column("event_name", String, nullable=False),
+    Column("event_type", String, nullable=False),
+    Column("semantic_label", String, nullable=False),
+    Column("action_type", String),
+    Column("page_path", String),
+    Column("page_title", String),
+    Column("element_type", String),
+    Column("element_text", String),
+    Column("context", JSON),
     Column("sequence_number", Integer),
     Index("ix_enriched_user_timestamp", "user_id", "timestamp"),
     Index("ix_enriched_session_timestamp", "session_id", "timestamp"),
