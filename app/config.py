@@ -49,7 +49,7 @@ class Settings(BaseSettings):
             database=self.db_name,
         )
 
-    model_config = SettingsConfigDict(env_file=BASE_DIR / ".env")
+    model_config = SettingsConfigDict(env_file=BASE_DIR / ".env", extra="ignore")
 
 
 SETTINGS = Settings()

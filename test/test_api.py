@@ -80,7 +80,7 @@ SAMPLE_SESSION = Session(
 @pytest.mark.asyncio
 async def test_ingest_success(mocker: MockerFixture, client: TestClient) -> None:
     mock_insert = mocker.patch("app.api.routes.insert_raw_event", new_callable=AsyncMock)
-    response = client.post("/ingest", json=SAMPLE_POSTHOG_EVENT)
+    response = client.post("/ingest", json={"event": SAMPLE_POSTHOG_EVENT})
     assert response.status_code == 202
     mock_insert.assert_awaited_once()
 
@@ -94,7 +94,7 @@ async def test_ingest_success(mocker: MockerFixture, client: TestClient) -> None
 @pytest.mark.asyncio
 async def test_ingest_invalid_payload(client: TestClient) -> None:
     invalid_payload = {"event": "$pageview"}  # Missing required fields
-    response = client.post("/ingest", json=invalid_payload)
+    response = client.post("/ingest", json={"event": invalid_payload})
     assert response.status_code == 422
 
 
@@ -226,7 +226,7 @@ async def test_full_flow_ingest_then_context(mocker: MockerFixture, client: Test
     mocker.patch("app.api.routes.insert_raw_event", new_callable=AsyncMock)
 
     # Ingest event
-    ingest_response = client.post("/ingest", json=SAMPLE_POSTHOG_EVENT)
+    ingest_response = client.post("/ingest", json={"event": SAMPLE_POSTHOG_EVENT})
     assert ingest_response.status_code == 202
 
     # Mock fetches for context

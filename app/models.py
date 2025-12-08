@@ -153,17 +153,6 @@ class Session(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class SessionCreate(BaseModel):
-    """Model for creating a new session"""
-
-    session_id: str  # PostHog's $session_id
-    user_id: str
-    started_at: datetime
-    last_activity_at: datetime
-    first_page: str | None = None
-    is_active: bool = True
-
-
 class SessionContext(BaseModel):
     """Session metadata for pattern detection"""
 

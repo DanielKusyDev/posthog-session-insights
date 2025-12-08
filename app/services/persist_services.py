@@ -1,9 +1,10 @@
 from uuid import UUID
 
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.db_models import enriched_event, raw_event, session
-from app.models import EnrichedEvent, PostHogEvent, RawEvent, RawEventStatus, Session, SessionCreate
+from app.models import PostHogEvent, RawEvent, RawEventStatus, Session, EnrichedEventCreate
 from app.services.event_parsing import EventType
 from app.services.query_services import fetch_session
 
@@ -33,24 +34,16 @@ async def mark_event_as_done(connection: AsyncConnection, event_id: UUID) -> Non
     await update_raw_event_status(connection, raw_event_id=event_id, status=RawEventStatus.done)
 
 
-async def create_session(connection: AsyncConnection, input_data: SessionCreate) -> Session:
-    """Create new session and return it using RETURNING clause"""
-    stmt = session.insert().values(**input_data.model_dump()).returning(session)
-    result = await connection.execute(stmt)
-    row = result.fetchone()
-    return Session.model_validate(row)
-
-
-async def create_enriched_event(connection: AsyncConnection, input_data: EnrichedEvent) -> None:
+async def create_enriched_event(connection: AsyncConnection, input_data: EnrichedEventCreate) -> None:
     stmt = enriched_event.insert().values(**input_data.model_dump())
     await connection.execute(stmt)
 
 
 async def get_or_create_session(connection: AsyncConnection, event: RawEvent) -> Session:
-    session_ = await fetch_session(connection=connection, session_id=event.session_id)
-
-    if not session_:
-        new_session = SessionCreate(
+    # Try to insert, ignore if already exists
+    insert_stmt = (
+        insert(session)
+        .values(
             session_id=event.session_id,
             user_id=event.user_id,
             started_at=event.timestamp,
@@ -58,12 +51,14 @@ async def get_or_create_session(connection: AsyncConnection, event: RawEvent) ->
             first_page=event.page_path,
             is_active=True,
         )
-        session_ = await create_session(connection=connection, input_data=new_session)
-    return session_
+        .on_conflict_do_nothing(index_elements=["session_id"])
+    )
+    await connection.execute(insert_stmt)
+    return await fetch_session(connection=connection, session_id=event.session_id)
 
 
 async def update_session_activity(
-    connection: AsyncConnection, session_id: str, event: RawEvent, enriched_event: EnrichedEvent
+    connection: AsyncConnection, session_id: str, event: RawEvent, enriched_event: EnrichedEventCreate
 ) -> None:
     """Update session statistics after processing an event."""
     values = {
