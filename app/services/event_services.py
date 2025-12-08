@@ -37,17 +37,6 @@ async def update_raw_event_status(connection: AsyncConnection, raw_event_id: UUI
     await connection.execute(stmt)
 
 
-async def fetch_events_for_processing(connection: AsyncConnection, batch_size: int) -> list[RawEvent]:
-    stmt = (
-        select(raw_event)
-        .where(raw_event.c.processed_at.is_(None), raw_event.c.status == RawEventStatus.pending)
-        .order_by(raw_event.c.created_at)
-        .limit(batch_size)
-        .with_for_update(skip_locked=True)
-    )
-    result = await connection.execute(stmt)
-    rows = result.fetchall()
-    return [RawEvent.model_validate(event) for event in rows]
 
 
 async def mark_event_as_failed(connection: AsyncConnection, event_id: UUID) -> None:

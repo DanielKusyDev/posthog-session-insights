@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 from uuid import UUID
@@ -51,6 +51,12 @@ class PageInfo(BaseModel):
     page_title: str
 
 
+class Severity(str, Enum):
+    low = "LOW"
+    medium = "MEDIUM"
+    high = "HIGH"
+
+
 class PostHogEvent(BaseModel):  # TODO consider renaming to "RawEventCreate"
     """Raw PostHog event schema for ingestion."""
 
@@ -99,9 +105,7 @@ class RawEventUpdate(BaseModel):
     status: RawEventStatus | None = None
 
 
-class EnrichedEventCreate(BaseModel):
-    """Model for creating enriched event (without auto-generated fields)"""
-
+class EnrichedEvent(BaseModel):
     raw_event_id: UUID
     user_id: str
     session_id: str
@@ -149,15 +153,3 @@ class SessionCreate(BaseModel):
     first_page: str | None = None
     is_active: bool = True
 
-
-class SessionUpdate(BaseModel):
-    """Model for updating session (all fields optional)"""
-
-    last_activity_at: datetime | None = None
-    ended_at: datetime | None = None
-    event_count: int | None = None
-    page_views_count: int | None = None
-    clicks_count: int | None = None
-    last_page: str | None = None
-    session_summary: str | None = None
-    is_active: bool | None = None
