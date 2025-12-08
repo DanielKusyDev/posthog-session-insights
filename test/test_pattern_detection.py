@@ -113,7 +113,9 @@ def test_event_filter_empty_events() -> None:
         param(SAMPLE_SESSION_CONTEXT, {"max_events": 20}, True, id="max_events_pass"),
         param(SAMPLE_SESSION_CONTEXT, {"max_events": 5}, False, id="max_events_fail"),
         param(SAMPLE_SESSION_CONTEXT, {"min_page_views": 3}, True, id="min_page_views_pass"),
+        param(SAMPLE_SESSION_CONTEXT, {"min_page_views": 6}, False, id="min_page_views_block"),
         param(SAMPLE_SESSION_CONTEXT, {"max_page_views": 10}, True, id="max_page_views_pass"),
+        param(SAMPLE_SESSION_CONTEXT, {"max_page_views": 1}, False, id="max_page_views_block"),
         param(SAMPLE_SESSION_CONTEXT, {"min_duration_seconds": 4, "min_events": 5}, True, id="combined_pass"),
         param(SAMPLE_SESSION_CONTEXT, {"min_duration_seconds": 4, "min_events": 20}, False, id="combined_fail"),
         param(
@@ -305,6 +307,56 @@ def test_session_filter_matches(
             ),
             True,  # Should match (completion was AFTER 30-min window)
             id="negative_filter_time_window_pass",
+        ),
+        param(
+            [
+                EnrichedEvent(
+                    enriched_event_id=uuid4(),
+                    raw_event_id=uuid4(),
+                    user_id="user-123",
+                    session_id="session-456",
+                    timestamp=datetime(2020, 1, 1),
+                    created_at=datetime(2020, 1, 1),
+                    event_name="checkout_started",
+                    event_type=EventType.custom,
+                    semantic_label="Started checkout",
+                    sequence_number=1,
+                ),
+                EnrichedEvent(
+                    enriched_event_id=uuid4(),
+                    raw_event_id=uuid4(),
+                    user_id="user-123",
+                    session_id="session-456",
+                    timestamp=datetime(2020, 1, 1, 0, 40),  # 40 min later
+                    created_at=datetime(2020, 1, 1, 0, 40),
+                    event_name="order_completed",
+                    event_type=EventType.custom,
+                    semantic_label="Order completed",
+                    sequence_number=2,
+                ),
+            ],
+            SessionContext(
+                session_id="session-456",
+                user_id="user-123",
+                started_at=datetime(2020, 1, 1),
+                ended_at=datetime(2020, 1, 1, 0, 45),
+                duration=timedelta(minutes=45),
+                event_count=2,
+                page_views_count=0,
+                clicks_count=0,
+                is_active=False,
+            ),
+            PatternRule(
+                code="checkout_abandoned",
+                description="Checkout abandoned",
+                severity=Severity.high,
+                filter=EventFilter(semantic_contains="checkout"),
+                min_count=1,
+                negative_filter=EventFilter(semantic_contains="completed"),
+                negative_time_window=timedelta(minutes=45),
+            ),
+            False,  # Should not match (event found in exactly 45 minutes since last one)
+            id="negative_filter_time_window_block",
         ),
     ],
 )

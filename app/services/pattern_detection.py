@@ -63,7 +63,6 @@ class PatternRule(BaseModel):
     min_count: int = 1
     negative_filter: EventFilter | None = None
     negative_time_window: timedelta | None = None
-    time_window: timedelta | None = None  # Window for checking positive events
 
     # Session-based conditions
     session_filter: SessionFilter | None = None
@@ -83,10 +82,6 @@ class PatternRule(BaseModel):
 
         # Apply positive filter
         positives = self.filter.apply(events_sorted)
-
-        # Check time window for positive events
-        if self.time_window:
-            positives = self._filter_by_time_window(positives, self.time_window)
 
         # Check min count
         if len(positives) < self.min_count:
@@ -110,26 +105,6 @@ class PatternRule(BaseModel):
                 return False  # Found negative event in window
 
         return True
-
-    def _filter_by_time_window(self, events: list[EnrichedEvent], window: timedelta) -> list[EnrichedEvent]:
-        """Keep only events that happened within time window"""
-        if not events:
-            return []
-
-        # Group events that happened close together
-        result = []
-        for i, event in enumerate(events):
-            if i == 0:
-                result.append(event)
-                continue
-
-            # Check if within window of any previous event in result
-            for prev in result:
-                if abs((event.timestamp - prev.timestamp).total_seconds()) <= window.total_seconds():
-                    result.append(event)
-                    break
-
-        return result
 
     def to_pattern(self) -> Pattern:
         return Pattern(

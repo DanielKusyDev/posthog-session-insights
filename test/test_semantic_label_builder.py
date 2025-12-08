@@ -1,3 +1,4 @@
+import pytest
 from pytest import mark, param
 
 from app.services.event_parsing import ActionType, EventType, PageInfo, ParsedElements
@@ -309,3 +310,16 @@ def test_semantic_label_builder_enrichment_priority() -> None:
 
     # Should use first matching rule
     assert "first div" in result or "second div" in result  # Depends on dict iteration order
+
+
+def test_semantic_label_builder_with_no_name_for_custom_event() -> None:
+    builder = SemanticLabelBuilder()
+    result = builder.build(
+        event_type=EventType.custom,
+        action_type=ActionType.click,
+        page_info=PageInfo(page_path="/", page_title="home page"),
+        element_info=ParsedElements(),
+        event_name=None,
+        properties={},
+    )
+    assert result == "Custom event"
