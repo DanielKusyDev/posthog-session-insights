@@ -112,8 +112,6 @@ def classify_event(event_name: str, properties: PostHogProperties) -> EventClass
             return EventClassification(event_type=EventType.navigation, action_type=ActionType.leave)
         case "$rageclick":
             return EventClassification(event_type=EventType.click, action_type=ActionType.rage_click)
-        case "$pageview":
-            return EventClassification(event_type=EventType.pageview, action_type=ActionType.view)
         case "$autocapture":
             return _classify_autocapture(properties)
 

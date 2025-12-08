@@ -148,3 +148,6 @@ PATTERN_RULES: list[PatternRule] = [
         negative_filter=EventFilter(semantic_contains="purchase"),
     ),
 ]
+
+
+CONTEXT_EXCLUDE_KEYS: set[str] = {"token", "distinct_id"}

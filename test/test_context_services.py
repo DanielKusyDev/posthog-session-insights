@@ -3,8 +3,8 @@ from uuid import UUID
 from pytest import mark, param
 
 from app.models import RawEvent
+from app.services.context_services import build_context
 from app.services.event_parsing import ParsedElements
-from app.services.event_services import build_context
 
 
 @mark.parametrize(

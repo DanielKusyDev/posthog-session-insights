@@ -7,10 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from app import init_settings
 from app.db import get_connection, get_transaction, init_db
 from app.models import RawEvent
-from app.services.enrichment_services import create_enriched_event, enrich_event
-from app.services.event_services import mark_event_as_done, mark_event_as_failed
+from app.services.enrichment_services import enrich_event
+from app.services.persist_services import (
+    get_or_create_session,
+    create_enriched_event,
+    update_session_activity,
+    mark_event_as_done, mark_event_as_failed,
+)
 from app.services.query_services import fetch_events_for_processing
-from app.services.session_services import get_or_create_session, update_session_activity
 
 BATCH_SIZE = 200
 WAIT_TIME = 1

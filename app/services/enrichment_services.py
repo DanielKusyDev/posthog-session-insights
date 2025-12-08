@@ -1,17 +1,9 @@
-from sqlalchemy.ext.asyncio import AsyncConnection
-
-from app.db_models import enriched_event
 from app.models import EnrichedEvent, RawEvent, Session
+from app.services.context_services import build_context
 from app.services.event_parsing import classify_event, extract_page_info, parse_elements_chain
-from app.services.event_services import build_context
 from app.services.semantic_builder_services import SemanticLabelBuilder
 
 _label_builder = SemanticLabelBuilder()
-
-
-async def create_enriched_event(connection: AsyncConnection, input_data: EnrichedEvent) -> None:
-    stmt = enriched_event.insert().values(**input_data.model_dump())
-    await connection.execute(stmt)
 
 
 async def enrich_event(event: RawEvent, session: Session) -> EnrichedEvent:

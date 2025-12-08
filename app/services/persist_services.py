@@ -1,9 +1,36 @@
+from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from app.db_models import session
-from app.models import EnrichedEvent, RawEvent, Session, SessionCreate
+from app.db_models import session, raw_event, enriched_event
+from app.models import EnrichedEvent, RawEvent, Session, SessionCreate, PostHogEvent, RawEventStatus
 from app.services.event_parsing import EventType
 from app.services.query_services import fetch_session
+
+
+async def insert_raw_event(connection: AsyncConnection, event: PostHogEvent) -> None:
+    stmt = raw_event.insert().values(
+        event_name=event.event,
+        user_id=event.distinct_id,
+        timestamp=event.timestamp,
+        properties=event.properties,
+        status=RawEventStatus.pending.value,
+        elements_chain=event.elements_chain,
+    )
+    await connection.execute(stmt)
+
+
+async def update_raw_event_status(connection: AsyncConnection, raw_event_id: UUID, status: RawEventStatus) -> None:
+    stmt = raw_event.update().values(status=status).where(raw_event.c.raw_event_id == raw_event_id)
+    await connection.execute(stmt)
+
+
+async def mark_event_as_failed(connection: AsyncConnection, event_id: UUID) -> None:
+    await update_raw_event_status(connection, raw_event_id=event_id, status=RawEventStatus.failed)
+
+
+async def mark_event_as_done(connection: AsyncConnection, event_id: UUID) -> None:
+    await update_raw_event_status(connection, raw_event_id=event_id, status=RawEventStatus.done)
 
 
 async def create_session(connection: AsyncConnection, input_data: SessionCreate) -> Session:
@@ -12,6 +39,11 @@ async def create_session(connection: AsyncConnection, input_data: SessionCreate)
     result = await connection.execute(stmt)
     row = result.fetchone()
     return Session.model_validate(row)
+
+
+async def create_enriched_event(connection: AsyncConnection, input_data: EnrichedEvent) -> None:
+    stmt = enriched_event.insert().values(**input_data.model_dump())
+    await connection.execute(stmt)
 
 
 async def get_or_create_session(connection: AsyncConnection, event: RawEvent) -> Session:

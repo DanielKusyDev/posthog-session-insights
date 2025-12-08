@@ -371,7 +371,7 @@ def test_infer_action_from_custom_event(event_name: str, expected: str) -> None:
     assert infer_action_from_custom_event(event_name) == expected
 
 
-def test_classify_event_case_insensitive_custom() -> None:
+def test_classify_event() -> None:
     """Test that custom event name matching is case-insensitive"""
     result_lower = classify_event("product_clicked", {})
     result_upper = classify_event("PRODUCT_CLICKED", {})
