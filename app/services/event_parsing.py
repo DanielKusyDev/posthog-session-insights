@@ -1,6 +1,6 @@
 import re
 
-from app.models import PostHogProperties, EventType, ParsedElements, EventClassification, ActionType, PageInfo
+from app.models import ActionType, EventClassification, EventType, PageInfo, ParsedElements, PostHogProperties
 
 
 def parse_elements_chain(chain: str) -> ParsedElements:

@@ -1,4 +1,5 @@
 from datetime import datetime
+from test.helpers import AsyncContextManagerMock
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -6,8 +7,7 @@ import pytest
 from pytest_mock import MockerFixture
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from app.models import RawEvent, Session, EnrichedEventCreate, RawEventStatus
-from test.helpers import AsyncContextManagerMock
+from app.models import EnrichedEventCreate, RawEvent, RawEventStatus, Session
 
 
 @pytest.fixture

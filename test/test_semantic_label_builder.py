@@ -1,5 +1,6 @@
-from pytest import param, mark
-from app.services.event_parsing import PageInfo, ParsedElements, EventType, ActionType
+from pytest import mark, param
+
+from app.services.event_parsing import ActionType, EventType, PageInfo, ParsedElements
 from app.services.semantic_builder_services import SemanticLabelBuilder
 
 

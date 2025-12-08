@@ -1,5 +1,6 @@
-from pytest import param, mark
-from app.utils import truncate_text, capitalize_first_letter, humanize_snake_case_string, hyphens_to_snake_case
+from pytest import mark, param
+
+from app.utils import capitalize_first_letter, humanize_snake_case_string, hyphens_to_snake_case, truncate_text
 
 
 @mark.parametrize(

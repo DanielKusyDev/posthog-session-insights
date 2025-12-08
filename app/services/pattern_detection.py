@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from pydantic import BaseModel
 
-from app.models import EventType, ActionType, EnrichedEvent, Pattern, Severity, SessionContext
+from app.models import ActionType, EnrichedEvent, EventType, Pattern, SessionContext, Severity
 
 
 class EventFilter(BaseModel):

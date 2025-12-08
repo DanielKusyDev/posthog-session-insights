@@ -4,10 +4,9 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
-from sqlalchemy.ext.asyncio import AsyncEngine
 
-from app.models import Severity, EventType, ActionType
-from app.services.pattern_detection import PatternRule, EventFilter, SessionFilter
+from app.models import ActionType, EventType, Severity
+from app.services.pattern_detection import EventFilter, PatternRule, SessionFilter
 
 BASE_DIR = Path(__name__).parent.parent
 
@@ -79,7 +78,6 @@ PATTERN_RULES: list[PatternRule] = [
         negative_filter=EventFilter(semantic_contains="account created"),
         negative_time_window=timedelta(minutes=15),
     ),
-
     # Medium-severity patterns (friction indicators)
     PatternRule(
         code="billing_hesitation",
@@ -114,7 +112,6 @@ PATTERN_RULES: list[PatternRule] = [
         min_count=4,
         negative_filter=EventFilter(semantic_contains="checkout"),
     ),
-
     # Low-severity patterns (engagement insights)
     PatternRule(
         code="quick_bounce",

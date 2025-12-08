@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.db_models import enriched_event
-from app.models import RawEvent, Session, EnrichedEvent
-from app.services.event_parsing import parse_elements_chain, classify_event, extract_page_info
+from app.models import EnrichedEvent, RawEvent, Session
+from app.services.event_parsing import classify_event, extract_page_info, parse_elements_chain
 from app.services.event_services import build_context
 from app.services.semantic_builder_services import SemanticLabelBuilder
 

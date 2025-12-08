@@ -1,5 +1,5 @@
 from app.services.event_parsing import ActionType, EventType, PageInfo, ParsedElements
-from app.utils import truncate_text, capitalize_first_letter, humanize_snake_case_string
+from app.utils import capitalize_first_letter, humanize_snake_case_string, truncate_text
 
 DEFAULT_CUSTOM_EVENT_TEMPLATES: dict[str, str] = {  # TODO move to the database
     "product_clicked": "Selected product: {product_name}",
@@ -14,6 +14,7 @@ DEFAULT_ELEMENT_ENRICHMENT_RULES: dict[str, str] = {  # TODO move to the databas
     "form-id": "{base_type} in form",
 }
 SEMANTIC_LABEL_MAX_LENGTH = 150
+
 
 class SemanticLabelBuilder:
     """

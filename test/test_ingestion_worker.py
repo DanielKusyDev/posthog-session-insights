@@ -1,12 +1,12 @@
+from test.helpers import AsyncContextManagerMock
 from typing import AsyncContextManager
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
-from unittest.mock import AsyncMock, MagicMock
 
-from app.models import RawEvent, Session, EnrichedEventCreate
-from app.workers.ingestion_worker import process_single_event, process_with_semaphore, process_batch
-from test.helpers import AsyncContextManagerMock
+from app.models import EnrichedEventCreate, RawEvent, Session
+from app.workers.ingestion_worker import process_batch, process_single_event, process_with_semaphore
 
 
 @pytest.fixture

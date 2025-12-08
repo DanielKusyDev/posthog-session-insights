@@ -1,16 +1,19 @@
 from enum import Enum
+
 from sqlalchemy import (
-    Table,
-    Column,
-    String,
-    DateTime,
     JSON,
-    Index,
     UUID,
-    Enum as SAEnum,
-    ForeignKey,
-    Integer,
     Boolean,
+    Column,
+    DateTime,
+)
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import (
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Table,
     Text,
 )
 from sqlalchemy.sql import func

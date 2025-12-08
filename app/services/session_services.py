@@ -1,8 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.db_models import session
-from app.models import RawEvent, EnrichedEvent
-from app.models import Session, SessionCreate
+from app.models import EnrichedEvent, RawEvent, Session, SessionCreate
 from app.services.event_parsing import EventType
 from app.services.query_services import fetch_session
 

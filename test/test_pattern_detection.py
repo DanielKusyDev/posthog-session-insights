@@ -1,11 +1,11 @@
-import pytest
 from datetime import datetime, timedelta
 from uuid import uuid4
 
+import pytest
 from pytest import param
 
-from app.models import EventType, ActionType, EnrichedEvent, Pattern, Severity, SessionContext
-from app.services.pattern_detection import EventFilter, SessionFilter, PatternRule, PatternEngine
+from app.models import ActionType, EnrichedEvent, EventType, Pattern, SessionContext, Severity
+from app.services.pattern_detection import EventFilter, PatternEngine, PatternRule, SessionFilter
 
 SAMPLE_EVENTS = [
     EnrichedEvent(

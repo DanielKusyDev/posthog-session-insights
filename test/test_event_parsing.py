@@ -1,17 +1,17 @@
-from pytest import param, mark
+from pytest import mark, param
 
 from app.services.event_parsing import (
-    parse_elements_chain,
-    ParsedElements,
-    classify_event,
+    ActionType,
     EventClassification,
     EventType,
-    ActionType,
-    infer_action_from_custom_event,
     PageInfo,
-    normalize_page_path,
+    ParsedElements,
+    classify_event,
     extract_page_info,
     humanize_page_path,
+    infer_action_from_custom_event,
+    normalize_page_path,
+    parse_elements_chain,
 )
 
 

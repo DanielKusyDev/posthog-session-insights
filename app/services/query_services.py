@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 
-from sqlalchemy import select, desc, func
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from app.db_models import raw_event, session, enriched_event
-from app.models import RawEvent, Session, RawEventStatus, EnrichedEvent
+from app.db_models import enriched_event, raw_event, session
+from app.models import EnrichedEvent, RawEvent, RawEventStatus, Session
 
 
 async def fetch_events_for_processing(connection: AsyncConnection, batch_size: int) -> list[RawEvent]:
