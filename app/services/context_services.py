@@ -1,6 +1,6 @@
 from typing import Any, Sequence
 
-from app.config import CONTEXT_EXCLUDE_KEYS, SETTINGS
+from app.config import SETTINGS
 from app.models import ActionType, EnrichedEvent, EventType, PostHogProperties
 from app.services.event_parsing import ParsedElements
 from app.utils import hyphens_to_snake_case
@@ -10,7 +10,7 @@ async def build_context(
     event_name: str,
     properties: PostHogProperties,
     element_info: ParsedElements,
-    excluded_keys: Sequence[str] = CONTEXT_EXCLUDE_KEYS,
+    excluded_keys: Sequence[str] = SETTINGS.context_exclude_keys,
 ) -> dict[str, Any]:
     """
     Build context dict with additional metadata for LLM.

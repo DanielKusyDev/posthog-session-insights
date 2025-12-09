@@ -65,5 +65,19 @@ services:
       DB_NAME: "posthog"
     command: python -m app.workers.ingestion_worker
 
+  # Demo Client - Simulates traffic with dynamic patterns
+  demo-client:
+    image: python:3.11-slim
+    restart: "no"  # Run once and exit
+    depends_on:
+      api:
+        condition: service_healthy
+    volumes:
+      - ./dummy_client.py:/app/dummy_client.py
+      - ./sample_events.json:/app/sample_events.json
+    working_dir: /app
+    command: >
+      sh -c "pip install httpx && python dummy_client.py"
+
 volumes:
   db-data:

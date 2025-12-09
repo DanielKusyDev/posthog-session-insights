@@ -7,7 +7,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from app.api.dependencies import DbTransaction
-from app.config import PATTERN_RULES
+from app.pattern_rules import PATTERN_RULES
 from app.models import PostHogEvent, SessionContext, UserContext
 from app.services.context_services import generate_events_summary
 from app.services.pattern_detection import PatternEngine
