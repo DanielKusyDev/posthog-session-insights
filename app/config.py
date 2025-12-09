@@ -9,10 +9,10 @@ BASE_DIR = Path(__name__).parent.parent
 
 class Settings(BaseSettings):
     db_driver: str = Field("postgresql+asyncpg", description="SQLAlchemy DB driver")
-    db_user: str = Field("")
+    db_user: str = Field("")  # placeholders to prevent tests from failing
     db_password: str = Field("")
     db_host: str = Field("")
-    db_port: int = Field("")
+    db_port: int = Field(8000)
     db_name: str = Field("")
 
     pages_in_summary_limit: int = Field(3, description="Max number of visited pages included in short session summary.")

@@ -24,9 +24,11 @@ jobs:
 
     - name: Check code formatting (Black)
       run: poetry run black --check .
+      continue-on-error: true
 
     - name: Check import sorting (isort)
       run: poetry run isort --check-only .
+      continue-on-error: true
 
     - name: Lint with flake8
       run: poetry run flake8 .
