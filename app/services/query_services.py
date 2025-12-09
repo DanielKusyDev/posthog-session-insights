@@ -21,7 +21,7 @@ async def fetch_events_for_processing(connection: AsyncConnection, batch_size: i
 
 
 async def fetch_recent_events(
-    connection: AsyncConnection, user_id: str, limit: int = 20, lookback_hours: int | None = None
+    connection: AsyncConnection, user_id: str, limit: int, lookback_hours: int | None
 ) -> list[EnrichedEvent]:
     """Fetch recent enriched events for a user."""
     stmt = select(enriched_event).where(enriched_event.c.user_id == user_id).order_by(desc(enriched_event.c.timestamp))

@@ -43,8 +43,12 @@ async def ingest(db: DbTransaction, data: PostHogWebhookPayload) -> Response:
 
 
 @router.get("/session/context/{user_id}", response_model=UserContext, description=GET_CONTEXT_DESCRIPTION)
-async def get_context(db: DbTransaction, user_id: str) -> UserContext:
-    cross_session_recent_events = await fetch_recent_events(connection=db, user_id=user_id)
+async def get_context(
+    db: DbTransaction, user_id: str, recent_events_limit: int = 20, lookback_hours: int | None = None
+) -> UserContext:
+    cross_session_recent_events = await fetch_recent_events(
+        connection=db, user_id=user_id, limit=recent_events_limit, lookback_hours=lookback_hours
+    )
     latest_session = await fetch_latest_session(connection=db, user_id=user_id)
 
     if not latest_session:
