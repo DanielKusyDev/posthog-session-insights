@@ -64,20 +64,19 @@ services:
       DB_PORT: 5432
       DB_NAME: "posthog"
     command: python -m app.workers.ingestion_worker
-
-  # Demo Client - Feeds the API with structured events. This approach ensures patters are found
-  demo-client:
+  # Demo Client - Simulates traffic
+  demo-client_randomized:
     image: python:3.11-slim
     restart: "no"  # Run once and exit
     depends_on:
       api:
         condition: service_healthy
     volumes:
-      - ./demo/dummy_client.py:/app/dummy_client.py
+      - ./demo/dummy_client_randomized.py:/app/dummy_client_randomized.py
       - ./demo/sample_events.json:/app/sample_events.json
     working_dir: /app
     command: >
-      sh -c "pip install httpx && python dummy_client.py"
+      sh -c "pip install httpx && python dummy_client_randomized.py"
 
 volumes:
   db-data:
