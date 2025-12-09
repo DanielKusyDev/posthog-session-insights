@@ -1,4 +1,5 @@
 from datetime import datetime
+from test.helpers import AsyncContextManagerMock
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -11,7 +12,6 @@ from starlette.testclient import TestClient
 from app.api.dependencies import get_transaction_dependency
 from app.api.routes import router
 from app.models import EnrichedEventCreate
-from test.helpers import AsyncContextManagerMock
 
 
 @pytest.fixture
