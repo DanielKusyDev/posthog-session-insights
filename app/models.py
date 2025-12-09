@@ -61,7 +61,7 @@ class PageInfo(BaseModel):
     page_title: str
 
 
-class PostHogEvent(BaseModel):  # TODO consider renaming to "RawEventCreate"
+class PostHogEvent(BaseModel):
     """Raw PostHog event schema for ingestion."""
 
     event: str
