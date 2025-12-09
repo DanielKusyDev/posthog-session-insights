@@ -50,7 +50,11 @@ from app.services.event_parsing import (
             id="single_custom_attribute",
         ),
         param(
-            'button.cursor-pointer.hover:text-indigo-600:attr__class="cursor-pointer transition-colors text-gray-700 hover:text-indigo-600"attr__data-ph-capture-attribute-nav="home"text="Shop";nav.flex.gap-6;header.bg-white',
+            (
+                "button.cursor-pointer.hover:text-indigo-600:"
+                'attr__class="cursor-pointer transition-colors text-gray-700 hover:text-indigo-600"'
+                'attr__data-ph-capture-attribute-nav="home"text="Shop";nav.flex.gap-6;header.bg-white'
+            ),
             ParsedElements(
                 element_type="button",
                 element_text="Shop",

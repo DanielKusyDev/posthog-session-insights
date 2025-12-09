@@ -72,7 +72,7 @@ async def fetch_user_sessions(
     stmt = select(session).where(session.c.user_id == user_id).order_by(desc(session.c.started_at)).limit(limit)
 
     if active_only:
-        stmt = stmt.where(session.c.is_active == True)
+        stmt = stmt.where(session.c.is_active.is_(True))
 
     result = await connection.execute(stmt)
     rows = result.fetchall()

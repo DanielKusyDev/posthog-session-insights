@@ -1,12 +1,3 @@
-from enum import Enum
-
-from sqlalchemy import (
-    JSON,
-    UUID,
-    Boolean,
-    Column,
-    DateTime,
-)
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import (
     ForeignKey,
@@ -15,6 +6,13 @@ from sqlalchemy import (
     String,
     Table,
     Text,
+)
+from sqlalchemy import (
+    JSON,
+    UUID,
+    Boolean,
+    Column,
+    DateTime,
 )
 from sqlalchemy.sql import func
 

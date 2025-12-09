@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.db_models import enriched_event, raw_event, session
-from app.models import PostHogEvent, RawEvent, RawEventStatus, Session, EnrichedEventCreate
+from app.models import EnrichedEventCreate, PostHogEvent, RawEvent, RawEventStatus, Session
 from app.services.event_parsing import EventType
 from app.services.query_services import fetch_session
 

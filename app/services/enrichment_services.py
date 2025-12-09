@@ -1,4 +1,4 @@
-from app.models import RawEvent, Session, EnrichedEventCreate
+from app.models import EnrichedEventCreate, RawEvent, Session
 from app.services.context_services import build_context
 from app.services.event_parsing import classify_event, extract_page_info, parse_elements_chain
 from app.services.semantic_builder_services import SemanticLabelBuilder

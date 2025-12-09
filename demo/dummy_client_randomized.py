@@ -2,6 +2,7 @@
 Simple dummy client that reads events from sample_events.json and sends them in a random order to the ingestion endpoint
 in "waves" of various frequency and number of batches. It's meant to simulate real, unpredictable traffic from users.
 """
+
 import asyncio
 import json
 import random
@@ -38,16 +39,16 @@ class DummyClient:
             "current_wave": 0,
             "current_rps": 0,
         }
-        
+
         # Traffic wave patterns: (min_rps, max_rps, duration_seconds)
         self.traffic_waves = [
-            (15, 25, random.uniform(8, 15)),    # Fast burst
-            (3, 7, random.uniform(10, 20)),     # Slow period
-            (1, 2, random.uniform(5, 10)),      # Very slow
-            (20, 35, random.uniform(8, 12)),    # High traffic
-            (5, 10, random.uniform(8, 15)),     # Medium
-            (1, 3, random.uniform(5, 8)),       # Slow again
-            (25, 40, random.uniform(10, 15)),   # Peak traffic
+            (15, 25, random.uniform(8, 15)),  # Fast burst
+            (3, 7, random.uniform(10, 20)),  # Slow period
+            (1, 2, random.uniform(5, 10)),  # Very slow
+            (20, 35, random.uniform(8, 12)),  # High traffic
+            (5, 10, random.uniform(8, 15)),  # Medium
+            (1, 3, random.uniform(5, 8)),  # Slow again
+            (25, 40, random.uniform(10, 15)),  # Peak traffic
         ]
 
     def load_events(self):
@@ -71,10 +72,7 @@ class DummyClient:
                 self.stats["success"] += 1
             else:
                 self.stats["failed"] += 1
-                self.stats["errors"].append({
-                    "status": response.status_code,
-                    "error": response.text[:200]
-                })
+                self.stats["errors"].append({"status": response.status_code, "error": response.text[:200]})
         except httpx.TimeoutException:
             self.stats["failed"] += 1
             self.stats["errors"].append({"error": "Timeout"})
@@ -103,7 +101,7 @@ class DummyClient:
         end_time = time.time() + self.duration_seconds
         wave_index = 0
         wave_start = time.time()
-        
+
         if self.use_traffic_waves:
             min_rps, max_rps, wave_duration = self.traffic_waves[wave_index]
             current_rps = random.uniform(min_rps, max_rps)
@@ -111,7 +109,7 @@ class DummyClient:
         else:
             current_rps = 10  # Fallback constant rate
             wave_duration = self.duration_seconds
-        
+
         self.stats["current_rps"] = current_rps
         self.stats["current_wave"] = wave_index
 
@@ -125,7 +123,7 @@ class DummyClient:
                 self.stats["current_rps"] = current_rps
                 self.stats["current_wave"] = wave_index
                 print(f"\n→ Switching to wave {wave_index + 1}: {current_rps:.1f} req/s for ~{wave_duration:.1f}s")
-            
+
             start = time.time()
             interval = 1.0 / current_rps
 
@@ -145,20 +143,17 @@ class DummyClient:
         self.load_events()
         self.stats["start_time"] = time.time()
 
-        print(f"\nStarting load test:")
-        print(f"  URL: {self.url}")
-        print(f"  Mode: {'Dynamic traffic waves' if self.use_traffic_waves else 'Constant rate'}")
-        print(f"  Duration: {self.duration_seconds} seconds")
-        print(f"  Concurrent workers: {self.max_concurrent}\n")
+        print("Starting load test:")
+        print(f"URL: {self.url}")
+        print(f"Mode: {'Dynamic traffic waves' if self.use_traffic_waves else 'Constant rate'}")
+        print(f"Duration: {self.duration_seconds} seconds")
+        print(f"Concurrent workers: {self.max_concurrent}\n")
 
         queue = asyncio.Queue(maxsize=self.max_concurrent * 2)
 
         async with httpx.AsyncClient() as client:
             # Start workers
-            workers = [
-                asyncio.create_task(self.worker(client, queue))
-                for _ in range(self.max_concurrent)
-            ]
+            workers = [asyncio.create_task(self.worker(client, queue)) for _ in range(self.max_concurrent)]
 
             # Start producer
             producer_task = asyncio.create_task(self.producer(queue))
@@ -169,8 +164,8 @@ class DummyClient:
                     await asyncio.sleep(5)
                     elapsed = time.time() - self.stats["start_time"]
                     rate = self.stats["total_sent"] / elapsed if elapsed > 0 else 0
-                    current_rps = self.stats.get('current_rps', 0)
-                    wave_num = self.stats.get('current_wave', 0) + 1
+                    current_rps = self.stats.get("current_rps", 0)
+                    wave_num = self.stats.get("current_wave", 0) + 1
                     print(
                         f"Progress: {self.stats['total_sent']} sent "
                         f"({self.stats['success']} success, {self.stats['failed']} failed) "
@@ -206,9 +201,9 @@ class DummyClient:
         actual_rate = self.stats["total_sent"] / duration if duration > 0 else 0
         success_rate = (self.stats["success"] / self.stats["total_sent"] * 100) if self.stats["total_sent"] > 0 else 0
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("LOAD TEST SUMMARY")
-        print("="*60)
+        print("=" * 60)
         print(f"Duration: {duration:.2f} seconds")
         print(f"Total requests sent: {self.stats['total_sent']}")
         print(f"Successful: {self.stats['success']} ({success_rate:.1f}%)")
@@ -216,11 +211,11 @@ class DummyClient:
         print(f"Average rate: {actual_rate:.1f} requests/second")
 
         if self.stats["errors"]:
-            print(f"\nFirst 5 errors:")
+            print("\nFirst 5 errors:")
             for error in self.stats["errors"][:5]:
                 print(f"  - {error}")
 
-        print("="*60)
+        print("=" * 60)
 
 
 async def main():

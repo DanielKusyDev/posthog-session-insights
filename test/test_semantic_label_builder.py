@@ -1,4 +1,3 @@
-import pytest
 from pytest import mark, param
 
 from app.services.event_parsing import ActionType, EventType, PageInfo, ParsedElements

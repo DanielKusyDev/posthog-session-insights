@@ -1,7 +1,7 @@
 from datetime import timedelta
 
-from app.models import Severity, ActionType
-from app.services.pattern_detection import PatternRule, EventFilter, SessionFilter
+from app.models import ActionType, Severity
+from app.services.pattern_detection import EventFilter, PatternRule, SessionFilter
 
 PATTERN_RULES: list[PatternRule] = [
     PatternRule(

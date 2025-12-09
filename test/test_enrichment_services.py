@@ -7,16 +7,16 @@ import pytest
 from pytest_mock import MockerFixture
 
 from app.models import (
+    ActionType,
+    EnrichedEvent,
+    EnrichedEventCreate,
+    EventClassification,
+    EventType,
+    PageInfo,
+    ParsedElements,
     RawEvent,
     RawEventStatus,
     Session,
-    EnrichedEvent,
-    EventType,
-    ActionType,
-    ParsedElements,
-    EventClassification,
-    PageInfo,
-    EnrichedEventCreate,
 )
 from app.services.enrichment_services import enrich_event
 

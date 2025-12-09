@@ -51,7 +51,7 @@ async def main():
     duration = time.time() - start_time
     success_rate = (successful / len(events) * 100) if events else 0
 
-    print(f"\nComplete!")
+    print("Complete!")
     print(f"Sent: {len(events)} events")
     print(f"Successful: {successful} ({success_rate:.1f}%)")
     print(f"Duration: {duration:.2f}s")

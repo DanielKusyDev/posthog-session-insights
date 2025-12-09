@@ -1,14 +1,11 @@
-import json
-
 from fastapi import APIRouter
 from pydantic import BaseModel
 from starlette import status
-from starlette.requests import Request
 from starlette.responses import Response
 
 from app.api.dependencies import DbTransaction
-from app.pattern_rules import PATTERN_RULES
 from app.models import PostHogEvent, SessionContext, UserContext
+from app.pattern_rules import PATTERN_RULES
 from app.services.context_services import generate_events_summary
 from app.services.pattern_detection import PatternEngine
 from app.services.persist_services import insert_raw_event
@@ -19,12 +16,12 @@ router = APIRouter()
 # For POC purposes only
 GET_CONTEXT_DESCRIPTION = """Get user context with recent events, last session summary and patterns.
 Important!
-To make the demo of this POC easier, I've created a script that automatically sends initial events to the service. 
+To make the demo of this POC easier, I've created a script that automatically sends initial events to the service.
 There are 2 pre-created users you can use to see the context results. User IDs:
 - 019aff19-86cb-7abd-b27e-5e3a34fc85f2
 - 019aff1e-0ace-7a5c-80a8-cfdac2d7e743
 
-You use them in the query to get the initial data quickly, or you can hook the service to your sample data or PostHog 
+You use them in the query to get the initial data quickly, or you can hook the service to your sample data or PostHog
 webhook (e.g. through ngrok) and emit your own events.
 """
 

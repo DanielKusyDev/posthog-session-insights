@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 import pytest
 from pytest import mark, param
 
-from app.models import RawEvent, ActionType, EventType, EnrichedEvent
+from app.models import ActionType, EnrichedEvent, EventType, RawEvent
 from app.services.context_services import build_context, generate_events_summary
 from app.services.event_parsing import ParsedElements
 
