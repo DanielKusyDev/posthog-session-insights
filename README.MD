@@ -54,7 +54,7 @@ A production-ready POC that transforms raw PostHog analytics events into structu
 
 1. **Clone and navigate to the project:**
 ```bash
-   git clone <repository-url>
+   git clone https://github.com/DanielKusyDev/posthog-session-insights
    cd posthog-session-insights
 ```
 
