@@ -676,3 +676,11 @@ session (
 ```
 
 **Design:** `raw_event` preserves audit trail → `enriched_event` adds semantics → `session` aggregates for fast queries.
+
+
+### AI Usage Note
+In this project, AI was used to:
+- generate react website to capture initial posthog events
+- interpret the task
+- generate tests cases and dummy client script
+- refactor the documentation
